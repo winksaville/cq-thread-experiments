@@ -1,9 +1,12 @@
 # from: https://groups.google.com/g/cadquery/c/5kVRpECcxAU/m/7no7_ja6AAAJ
 from math import cos, pi, sin
+from typing import cast
 
 import cadquery as cq
 
-from wing_utils import show
+from wing_utils import setCtx, show
+
+setCtx(globals())
 
 
 def helix(r0, r_eps, p, h, depth=0, frac=1e-1):
@@ -59,27 +62,71 @@ def thread(radius, pitch, height, depth, radius_eps, aspect=10):
 
     return rv
 
-
-radius = 4
 pitch = 2
-height = 4
-depth = pitch / 4
-radius_eps = 0.5
-eps = 1e-3
+depth = pitch / 4 # Adjust z by depth so threads are inset from the bottom?
+threadOverlap = 0.001
+radius_eps = 0.5 + threadOverlap # "width" of the thread?
+#eps = 0.01 #1e-3
+stlTolerance = 1e-3
 
-core = (
+nominalMajDia = 8
+nutAdjustment = 0
+nutDiameter = nominalMajDia - nutAdjustment
+nutRadius = nutDiameter / 2
+nutHeight = 4 # Nut height
+nutSpan = 12 # Nut circumference and distance between flats
+
+boltAdjustment = 0.1
+boltDiameter = nominalMajDia - boltAdjustment
+boltRadius = (boltDiameter / 2) - radius_eps
+boltHeight = 10
+boltWallThickness = 2 # amount substracted from bolt radius to hollow out the bolt
+
+
+
+boltShaft = (
     cq.Workplane("XY", origin=(0, 0, -depth))
-    .circle(radius - 1 - eps)
-    .circle(radius + eps)
-    .extrude(height + 1.75 * depth)
+    .circle(boltRadius)
+    .circle(boltRadius - boltWallThickness)
+    .extrude(boltHeight + 1.75 * depth)
 )
-th1 = thread(radius, pitch, height, depth, radius_eps)
-th2 = thread(radius - 1, pitch, height, depth, -radius_eps)
+#show(boltShaft.translate((radius * 4, 0, 0)), "boltShaft+4")
+show(boltShaft, "boltShaft-0")
+boltShaftBb: cq.BoundBox = cast(cq.Shape, boltShaft.val()).BoundingBox()
+print(f"boltShaftBb={vars(boltShaftBb)}")
 
-res = core.union(cq.Compound.makeCompound([th1, th2]))
+boltThreads = thread(boltRadius - threadOverlap, pitch, boltHeight, depth, radius_eps)
+boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
+print(f"boltThreadsBb={vars(boltThreadsBb)}")
+#show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
+show(boltThreads, "botThreads-0")
 
-show(res)
+bolt = boltShaft.union(boltThreads)
+#show(bolt.translate((radius * 4, 0, 0)), "bolt+4")
+show(bolt, "bolt-0")
 
-tolerance = 1e-3
-fname = f"thread1-radius_{radius}-pitch_{pitch}-depth_{depth}-height_{height}-tol_{tolerance}.stl"
-cq.exporters.export(res, fname, tolerance=tolerance)
+nutCore = (
+    cq.Workplane("XY", origin=(0, 0, -depth))
+    .circle(nutRadius)
+    .polygon(6, nutSpan)
+    .extrude(nutHeight + 1.75 * depth)
+)
+#show(nutCore.translate((-radius * 4, 0, 0)), "nutCore-4")
+show(nutCore, "nutCore-0")
+
+nutThreads = thread(nutRadius + threadOverlap, pitch, nutHeight, depth, -radius_eps)
+nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
+print(f"nutThreadsBb={vars(nutThreadsBb)}")
+#show(nutThreads.translate((-radius * 4, 0, 0)), "nutThreads-4")
+show(nutThreads, "nutThreads-0")
+
+nut = nutCore.union(nutThreads)
+#show(nut.translate((-radius * 4, 0, 0)), "nut-4")
+show(nut, "nut-0")
+
+
+fname = f"bolt-dia_{boltDiameter:.3f}-pitch_{pitch:.3f}-depth_{depth:.3f}-height_{boltHeight:.3f}-tol_{stlTolerance:.3f}.stl"
+cq.exporters.export(bolt, fname, tolerance=stlTolerance)
+
+fname = f"nut-dia_{nutDiameter:.3f}-pitch_{pitch:.3f}-depth_{depth:.3f}-height_{nutHeight:.3f}-tol_{stlTolerance:.3f}.stl"
+cq.exporters.export(nut, fname, tolerance=stlTolerance)
