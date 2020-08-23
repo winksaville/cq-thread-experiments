@@ -62,26 +62,26 @@ def thread(radius, pitch, height, depth, radius_eps, aspect=10):
 
     return rv
 
+
 pitch = 2
-depth = pitch / 4 # Adjust z by depth so threads are inset from the bottom?
+depth = pitch / 4  # Adjust z by depth so threads are inset from the bottom?
 threadOverlap = 0.001
-radius_eps = 0.5 + threadOverlap # "width" of the thread?
-#eps = 0.01 #1e-3
+radius_eps = 0.5 + threadOverlap  # "width" of the thread?
+# eps = 0.01 #1e-3
 stlTolerance = 1e-3
 
 nominalMajDia = 8
 nutAdjustment = 0
 nutDiameter = nominalMajDia - nutAdjustment
 nutRadius = nutDiameter / 2
-nutHeight = 4 # Nut height
-nutSpan = 12 # Nut circumference and distance between flats
+nutHeight = 4  # Nut height
+nutSpan = 12  # Nut circumference and distance between flats
 
 boltAdjustment = 0.1
 boltDiameter = nominalMajDia - boltAdjustment
 boltRadius = (boltDiameter / 2) - radius_eps
 boltHeight = 10
-boltWallThickness = 2 # amount substracted from bolt radius to hollow out the bolt
-
+boltWallThickness = 2  # amount substracted from bolt radius to hollow out the bolt
 
 
 boltShaft = (
@@ -90,7 +90,7 @@ boltShaft = (
     .circle(boltRadius - boltWallThickness)
     .extrude(boltHeight + 1.75 * depth)
 )
-#show(boltShaft.translate((radius * 4, 0, 0)), "boltShaft+4")
+# show(boltShaft.translate((radius * 4, 0, 0)), "boltShaft+4")
 show(boltShaft, "boltShaft-0")
 boltShaftBb: cq.BoundBox = cast(cq.Shape, boltShaft.val()).BoundingBox()
 print(f"boltShaftBb={vars(boltShaftBb)}")
@@ -98,11 +98,11 @@ print(f"boltShaftBb={vars(boltShaftBb)}")
 boltThreads = thread(boltRadius - threadOverlap, pitch, boltHeight, depth, radius_eps)
 boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
 print(f"boltThreadsBb={vars(boltThreadsBb)}")
-#show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
+# show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
 show(boltThreads, "botThreads-0")
 
 bolt = boltShaft.union(boltThreads)
-#show(bolt.translate((radius * 4, 0, 0)), "bolt+4")
+# show(bolt.translate((radius * 4, 0, 0)), "bolt+4")
 show(bolt, "bolt-0")
 
 nutCore = (
@@ -111,17 +111,17 @@ nutCore = (
     .polygon(6, nutSpan)
     .extrude(nutHeight + 1.75 * depth)
 )
-#show(nutCore.translate((-radius * 4, 0, 0)), "nutCore-4")
+# show(nutCore.translate((-radius * 4, 0, 0)), "nutCore-4")
 show(nutCore, "nutCore-0")
 
 nutThreads = thread(nutRadius + threadOverlap, pitch, nutHeight, depth, -radius_eps)
 nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
 print(f"nutThreadsBb={vars(nutThreadsBb)}")
-#show(nutThreads.translate((-radius * 4, 0, 0)), "nutThreads-4")
+# show(nutThreads.translate((-radius * 4, 0, 0)), "nutThreads-4")
 show(nutThreads, "nutThreads-0")
 
 nut = nutCore.union(nutThreads)
-#show(nut.translate((-radius * 4, 0, 0)), "nut-4")
+# show(nut.translate((-radius * 4, 0, 0)), "nut-4")
 show(nut, "nut-0")
 
 
