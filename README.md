@@ -8,8 +8,9 @@ Currently can create an 8m nut and bolt, the fit is "sloppy" but
 will be improved. Something else that needs imporvement is the variable
 names should match common nomenclature. Here are some sources:
 
+
 - https://en.wikipedia.org/wiki/ISO_metric_screw_thread
-![](https://en.wikipedia.org/wiki/ISO_metric_screw_thread#/media/File:ISO_and_UTS_Thread_Dimensions.svg)
+![](./images/iso-metric-screw-thread.png)
 - https://en.wikipedia.org/wiki/Unified_Thread_Standard
 - http://www.afi.cc/?page=customer&file=customer/asfain/customerpages/Blog/ScrewThreadTerminology.htm
 - http://portal.ku.edu.tr/~cbasdogan/Courses/MDesign/course_notes/fasteners.pdf
