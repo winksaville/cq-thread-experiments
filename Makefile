@@ -1,7 +1,7 @@
 
 .PHONY: all, format
 
-app=thread1.py
+app=thread3.py
 
 all:
 	@echo "make <target>"
