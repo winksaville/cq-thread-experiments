@@ -12,7 +12,7 @@ setCtx(globals())
 helixCount: int = 0
 
 
-def helix(radius, threadHeight, pitch, height, inset=0, frac=1e-1):
+def helix(radius, threadDepth, pitch, height, inset=0, frac=1e-1):
     def func(t):  # t is a value that starts a zero ends at 1
 
         global helixCount
@@ -36,7 +36,7 @@ def helix(radius, threadHeight, pitch, height, inset=0, frac=1e-1):
 
         fadeScale: float = sin(fadeAngle)
         z: float = (height * t) + (inset * fadeScale)
-        r: float = radius + (threadHeight * fadeScale)
+        r: float = radius + (threadDepth * fadeScale)
 
         a: float = 2 * pi / (pitch / height) * t
         x: float = r * sin(-a)
@@ -49,7 +49,7 @@ def helix(radius, threadHeight, pitch, height, inset=0, frac=1e-1):
     return func
 
 
-def thread(radius, threadHeight, pitch, height, inset, aspect=10):
+def thread(radius, threadDepth, pitch, height, inset, aspect=10):
 
     e1_bottom = (
         cq.Workplane("XY")
@@ -65,14 +65,14 @@ def thread(radius, threadHeight, pitch, height, inset, aspect=10):
 
     e2_bottom = (
         cq.Workplane("XY")
-        .parametricCurve(helix(radius, threadHeight, pitch, height, -inset / aspect))
+        .parametricCurve(helix(radius, threadDepth, pitch, height, -inset / aspect))
         .val()
     )
     # show(e2_bottom, "e2_bottom")
 
     e2_top = (
         cq.Workplane("XY")
-        .parametricCurve(helix(radius, threadHeight, pitch, height, inset / aspect))
+        .parametricCurve(helix(radius, threadDepth, pitch, height, inset / aspect))
         .val()
     )
     # show(e2_top, "e2_top")
@@ -91,7 +91,7 @@ def thread(radius, threadHeight, pitch, height, inset, aspect=10):
 pitch = 2
 inset = pitch / 4  # Adjust z by inset so threads are inset from the bottom?
 threadOverlap = 0.001
-threadHeight = 0.5 + threadOverlap  # "width" of the thread?
+threadDepth = 0.5 + threadOverlap  # "width" of the thread?
 stlTolerance = 1e-3
 
 nominalMajDia = 8
@@ -103,7 +103,7 @@ nutSpan = 12  # Nut circumference and distance between flats
 
 boltAdjustment = 0.1
 boltDiameter = nominalMajDia - boltAdjustment
-boltRadius = (boltDiameter / 2) - threadHeight
+boltRadius = (boltDiameter / 2) - threadDepth
 boltHeight = 10
 boltWallThickness = 2  # amount substracted from bolt radius to hollow out the bolt
 
@@ -119,7 +119,7 @@ print(f"boltShaftBb={vars(boltShaftBb)}")
 # show(boltShaft.translate((radius * 4, 0, 0)), "boltShaft+4")
 # show(boltShaft, "boltShaft-0")
 
-boltThreads = thread(boltRadius - threadOverlap, threadHeight, pitch, boltHeight, inset)
+boltThreads = thread(boltRadius - threadOverlap, threadDepth, pitch, boltHeight, inset)
 boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
 print(f"boltThreadsBb={vars(boltThreadsBb)}")
 # show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
@@ -138,7 +138,7 @@ nutCore = (
 # show(nutCore.translate((-radius * 4, 0, 0)), "nutCore-4")
 # show(nutCore, "nutCore-0")
 
-nutThreads = thread(nutRadius + threadOverlap, -threadHeight, pitch, nutHeight, inset)
+nutThreads = thread(nutRadius + threadOverlap, -threadDepth, pitch, nutHeight, inset)
 nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
 print(f"nutThreadsBb={vars(nutThreadsBb)}")
 # show(nutThreads.translate((-radius * 4, 0, 0)), "nutThreads-4")
@@ -149,8 +149,8 @@ nut = nutCore.union(nutThreads)
 show(nut, "nut-0")
 
 
-fname = f"bolt-dia_{boltDiameter:.3f}-pitch_{pitch:.3f}-depth_{inset:.3f}-height_{boltHeight:.3f}-tol_{stlTolerance:.3f}.stl"
+fname = f"bolt-dia_{boltDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{boltHeight:.3f}-tol_{stlTolerance:.3f}.stl"
 cq.exporters.export(bolt, fname, tolerance=stlTolerance)
 
-fname = f"nut-dia_{nutDiameter:.3f}-pitch_{pitch:.3f}-depth_{inset:.3f}-height_{nutHeight:.3f}-tol_{stlTolerance:.3f}.stl"
+fname = f"nut-dia_{nutDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{nutHeight:.3f}-tol_{stlTolerance:.3f}.stl"
 cq.exporters.export(nut, fname, tolerance=stlTolerance)
