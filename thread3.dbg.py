@@ -19,21 +19,29 @@ def helix(radius, threadDepth, pitch, height, inset=0, frac=1e-1):
         if t == 0:
             helixCount = 0
 
-        print(f"helix.func:+ {helixCount}: t={t:.4f} r={radius} t={threadDepth} p={pitch} h={height} i={inset} f={frac}")
+        print(
+            f"helix.func:+ {helixCount}: t={t:.4f} r={radius} t={threadDepth} p={pitch} h={height} i={inset} f={frac}"
+        )
         fadeAngle: float
 
         if (frac > 0) and (t <= frac):
             # fadeAngle is 0 to 90deg allowing fadeScale to be 0 to 1 by using sin(fadeAngle)
             fadeAngle = pi / 2 * t / frac
-            print(f"helix.func:  {helixCount}: t={t:.4f} fa={degrees(fadeAngle):.3f} FIRST {t:.4f} <= {frac:.3f} ")
+            print(
+                f"helix.func:  {helixCount}: t={t:.4f} fa={degrees(fadeAngle):.3f} FIRST {t:.4f} <= {frac:.3f} "
+            )
         elif (frac == 0) or ((t > frac) and (t < 1 - frac)):
             # fadeAngle is 90deg allowing fadeScale making 1 using sin(90) == 1
             fadeAngle = pi / 2
-            print(f"helix.func:  {helixCount}: t={t:.4f} fa={degrees(fadeAngle):.3f} MIDDL {t:.4f} > {frac:.3f} and {t:.4f} < {(1 - frac):.3f}")
+            print(
+                f"helix.func:  {helixCount}: t={t:.4f} fa={degrees(fadeAngle):.3f} MIDDL {t:.4f} > {frac:.3f} and {t:.4f} < {(1 - frac):.3f}"
+            )
         else:
             # fadeAngle is 90 to 0deg allowing fadeScale to be 1 to 0 by using sin(fadeAngle)
             fadeAngle = -(2 * pi - pi / 2 * (1 - t) / frac)
-            print(f"helix.func:  {helixCount}: t={t:.4f} fa={degrees(fadeAngle):.3f} LAST  {t:.4f} >= {frac:.3f} ")
+            print(
+                f"helix.func:  {helixCount}: t={t:.4f} fa={degrees(fadeAngle):.3f} LAST  {t:.4f} >= {frac:.3f} "
+            )
 
         fadeScale: float = sin(fadeAngle)
         z: float = (height * t) + (inset * fadeScale)
@@ -43,7 +51,9 @@ def helix(radius, threadDepth, pitch, height, inset=0, frac=1e-1):
         x: float = r * sin(-a)
         y: float = r * cos(a)
 
-        print(f"helix.func:- {helixCount}: t={t:.4f} r={r:.3f} a={degrees(a):.3f} fa={degrees(fadeAngle):.3f} fs={fadeScale:.3f} ({x:.3f}, {y:.3f}, {z:.3f})")
+        print(
+            f"helix.func:- {helixCount}: t={t:.4f} r={r:.3f} a={degrees(a):.3f} fa={degrees(fadeAngle):.3f} fs={fadeScale:.3f} ({x:.3f}, {y:.3f}, {z:.3f})"
+        )
         helixCount += 1
         return x, y, z
 
@@ -57,7 +67,7 @@ def thread(radius, threadDepth, pitch, height, inset, aspect=10):
         .parametricCurve(helix(radius, 0, pitch, height, -inset))
         .val()
     )
-    #print(f"e1_bottom={e1_bottom}")
+    # print(f"e1_bottom={e1_bottom}")
     show(e1_bottom, "e1_bottom")
 
     e1_top = (
@@ -125,12 +135,12 @@ boltThreads = thread(boltRadius - threadOverlap, threadDepth, pitch, boltHeight,
 # boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
 # print(f"boltThreadsBb={vars(boltThreadsBb)}")
 # show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
-#show(boltThreads, "botThreads-0")
+# show(boltThreads, "botThreads-0")
 
 # bolt = boltShaft.union(boltThreads)
 # # show(bolt.translate((radius * 4, 0, 0)), "bolt+4")
 # show(bolt, "bolt-0")
-# 
+#
 # nutCore = (
 #     cq.Workplane("XY", origin=(0, 0, -inset))
 #     .circle(nutRadius)
@@ -139,7 +149,7 @@ boltThreads = thread(boltRadius - threadOverlap, threadDepth, pitch, boltHeight,
 # )
 # # show(nutCore.translate((-radius * 4, 0, 0)), "nutCore-4")
 # # show(nutCore, "nutCore-0")
-# 
+#
 # nutThreads = thread(nutRadius + threadOverlap, -threadDepth, pitch, nutHeight, inset)
 # nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
 # print(f"nutThreadsBb={vars(nutThreadsBb)}")
@@ -149,10 +159,10 @@ boltThreads = thread(boltRadius - threadOverlap, threadDepth, pitch, boltHeight,
 # nut = nutCore.union(nutThreads)
 # # show(nut.translate((-radius * 4, 0, 0)), "nut-4")
 # show(nut, "nut-0")
-# 
-# 
+#
+#
 # fname = f"bolt-dia_{boltDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{boltHeight:.3f}-tol_{stlTolerance:.3f}.stl"
 # cq.exporters.export(bolt, fname, tolerance=stlTolerance)
-# 
+#
 # fname = f"nut-dia_{nutDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{nutHeight:.3f}-tol_{stlTolerance:.3f}.stl"
 # cq.exporters.export(nut, fname, tolerance=stlTolerance)
