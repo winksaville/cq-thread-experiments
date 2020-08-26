@@ -59,7 +59,7 @@ def threadHelix(
     angleDegs: float = 60,
     diaMajorCutOffPitchDivisor: Union[float, None] = 8,
     diaMinorCutOffPitchDivisor: Union[float, None] = 4,
-    threadOverlap: float = 0.001,  # Extend threadDepth slightly so there is overlap with shaft
+    threadOverlap: float = 0,
     inset: float = 0,
     frac: float = 0.10,
 ) -> Tuple[cq.Solid, float]:
@@ -95,12 +95,11 @@ def threadHelix(
     threadDepth: float = diaMinorToTip - diaMajorToTip
     diaMinor: float = diaMajor - (threadDepth * 2)
 
-    rv: cqSolid = None
+    rv: cq.Solid = None
 
-    # Adjust diaMinor and diaMinorThreadHalfHeight by threadOverlap
+    # Adjust diaMinor by threadOverlap
     if diaMinor > threadOverlap:
         diaMinor -= (threadOverlap * 2)
-    diaMinorThreadHalfHeight += threadOverlap / tanAngle
     print(f"threadHelix: diaMajorToTip={diaMajorToTip:.3f} diaMinorToTip={diaMinorToTip:.3f} threadDepth={threadDepth:.3f} diaMinor={diaMinor:.3f}")
 
     if (diaMajorCutOff == 0) and (diaMinorCutOff == 0):
@@ -206,7 +205,7 @@ def threadHelix(
 pitch = 1
 angleDegs = 60
 inset = pitch / 4  # Adjust z by inset so threads are inset from the bottom?
-threadOverlap = 0.001
+threadOverlap = 0  # Set to something like 0.001 if non-manifold
 stlTolerance = 1e-3
 
 nominalMajorDia = 8
@@ -222,13 +221,15 @@ boltRadius = (boltDiameter / 2)
 boltHeight = 10
 boltWallThickness = 2  # amount substracted from bolt radius to hollow out the bolt
 
+majorPd=8
+minorPd=4
 
 boltThreads, threadDepth = threadHelix(
-    #boltHeight, boltDiameter, pitch=pitch, angleDegs=60, diaMajorCutOffPitchDivisor=8, diaMinorCutOffPitchDivisor=2, inset=inset, frac=0.1,
-    boltHeight, boltDiameter, pitch=pitch, angleDegs=60, diaMajorCutOffPitchDivisor=None, diaMinorCutOffPitchDivisor=None, threadOverlap=threadOverlap, inset=inset, frac=0.1,
+    boltHeight, boltDiameter, pitch=pitch, angleDegs=60, diaMajorCutOffPitchDivisor=minorPd, diaMinorCutOffPitchDivisor=minorPd, inset=inset, frac=0.1,
 )
+print(f"threadDepth={threadDepth}")
 boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
-print(f"threadDepth={threadDepth} boltThreadsBb={vars(boltThreadsBb)}")
+print(f"boltThreadsBb={vars(boltThreadsBb)}")
 # show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
 # show(boltThreads, "botThreads-0")
 
@@ -272,9 +273,9 @@ show(bolt, "bolt-0")
 #
 #
 print("begin export")
-fname = f"bolt-dia_{boltDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{boltHeight:.3f}-tol_{stlTolerance:.3f}.stl"
+fname = f"bolt-dia_{boltDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{boltHeight:.3f}-mjPd_{majorPd}-miPd_{minorPd:}-to_{threadOverlap:.4f}-tol_{stlTolerance:.3f}.stl"
 cq.exporters.export(bolt, fname, tolerance=stlTolerance)
 print("done  export")
 #
-# fname = f"nut-dia_{nutDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{nutHeight:.3f}-tol_{stlTolerance:.3f}.stl"
+# fname = f"nut-dia_{nutDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{nutHeight:.3f}-mjPd_{majorPd}-miPd_{minorPd}-to_{threadOverlap:.4f}-tol_{stlTolerance:.3f}.stl"
 # cq.exporters.export(nut, fname, tolerance=stlTolerance)
