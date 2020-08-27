@@ -56,9 +56,10 @@ def threadHelix(
     diaMajor: float,
     pitch: float = 1,
     angleDegs: float = 60,
+    externalThreads: bool = True,
     diaMajorCutOffPitchDivisor: Union[float, None] = 8,
     diaMinorCutOffPitchDivisor: Union[float, None] = 4,
-    threadOverlap: float = 0,
+    threadOverlap: float = 0.0001,
     inset: float = 0,
     frac: float = 0.10,
 ) -> Tuple[cq.Solid, float]:
@@ -71,15 +72,16 @@ def threadHelix(
     typically None for nuts as there is overlap with the nut barrel
     :param diaMinorCutOffPitchDivisor: is v in pitch/v to determin size of MinorCutOff
     typically None for bolts so there is overlap with the stud
-    :param threadOverlap: amount to increase threadDepth so core overlaps with threads
+    :param threadOverlap: amount to increase alter dimensions so threads and core overlap
+    and a minifold is created
     :param inset: number units in the z direction
     :param frac: percent of threads for fade in and fade out
     :returns: Solid representing the threads and float dept
     """
 
-    # print(f"threadHelix:+ height={height:.3f} diaMajor={diaMajor:.3f} pitch={pitch:.3f} angleDegs={angleDegs:.3f}")
-    # print(f"threadHelix:  diaMajorCutOffPitchDivisor={diaMajorCutOffPitchDivisor} diaMinorCutOffPitchDivisor={diaMinorCutOffPitchDivisor}")
-    # print(f"threadHelix:  threadOverlap={threadOverlap:.3f} inset={inset:.3f} frac={frac:.3f}")
+    print(f"threadHelix:+ height={height:.3f} diaMajor={diaMajor:.3f} pitch={pitch:.3f} angleDegs={angleDegs:.3f} externalThreads={externalThreads}")
+    print(f"threadHelix: diaMajorCutOffPitchDivisor={diaMajorCutOffPitchDivisor} diaMinorCutOffPitchDivisor={diaMinorCutOffPitchDivisor}")
+    print(f"threadHelix: threadOverlap={threadOverlap:.3f} inset={inset:.3f} frac={frac:.3f}")
 
     angleRadians: float = radians(angleDegs)
     tanAngle: float = tan(angleRadians)
@@ -91,27 +93,36 @@ def threadHelix(
     ) else 0
     diaMajorThreadHalfHeight: float = diaMajorCutOff / 2
     diaMinorThreadHalfHeight: float = (pitch - diaMinorCutOff) / 2
-    # print(f"threadHelix: angle={angleDegs:.3f} angleRadians={angleRadians:.3f} tanAngle={tanAngle:.3f} diaMajorCutOff={diaMajorCutOff:.3f} diaMinorCutOff={diaMinorCutOff:.3f} diaMajorThreadHalfHeight={diaMajorThreadHalfHeight:.3f} diaMinorThreadHalfHeight={diaMinorThreadHalfHeight:.3f}")
+    print(f"threadHelix: angle={angleDegs:.3f} angleRadians={angleRadians:.3f} tanAngle={tanAngle:.3f} diaMajorCutOff={diaMajorCutOff:.3f} diaMinorCutOff={diaMinorCutOff:.3f} diaMajorThreadHalfHeight={diaMajorThreadHalfHeight:.3f} diaMinorThreadHalfHeight={diaMinorThreadHalfHeight:.3f}")
 
     diaMajorToTip: float = diaMajorThreadHalfHeight * tanAngle
     diaMinorToTip: float = diaMinorThreadHalfHeight * tanAngle
     threadDepth: float = diaMinorToTip - diaMajorToTip
-    diaMinor: float = diaMajor - (threadDepth * 2)
+
+    helixRadius: float
+    td: float
+    if externalThreads:
+        # External threads
+        helixRadius = (diaMajor / 2) - (threadDepth + threadOverlap)
+        td = threadDepth + threadOverlap
+    else:
+        # Internal threads
+        helixRadius = (diaMajor / 2) + threadOverlap
+        td = -(threadDepth + threadOverlap)
 
     rv: cq.Solid = None
 
-    # Adjust diaMinor by threadOverlap
-    if diaMinor > threadOverlap:
-        diaMinor -= threadOverlap * 2
-    # print(f"threadHelix: diaMajorToTip={diaMajorToTip:.3f} diaMinorToTip={diaMinorToTip:.3f} threadDepth={threadDepth:.3f} diaMinor={diaMinor:.3f}")
+    # print(f"threadHelix: diaMajor={diaMajor:.3f} helixRadius={helixRadius:.3f} td={td:.3f}")
+    # print(f"threadHelix: diaMajorToTip={diaMajorToTip:.3f} diaMinorToTip={diaMinorToTip:.3f}")
 
-    if (diaMajorCutOff == 0) and (diaMinorCutOff == 0):
+    if False: # diaMajorCutOff == 0:
+    #if (diaMajorCutOff == 0) and (diaMinorCutOff == 0):
         # One major helix two minor helixes
         minor1 = (
             cq.Workplane("XY")
             .parametricCurve(
                 helix(
-                    diaMinor / 2,
+                    helixRadius,
                     0,
                     -diaMinorThreadHalfHeight,
                     pitch,
@@ -129,7 +140,7 @@ def threadHelix(
             cq.Workplane("XY")
             .parametricCurve(
                 helix(
-                    diaMinor / 2,
+                    helixRadius,
                     0,
                     +diaMinorThreadHalfHeight,
                     pitch,
@@ -145,17 +156,7 @@ def threadHelix(
 
         major1 = (
             cq.Workplane("XY")
-            .parametricCurve(
-                helix(
-                    diaMinor / 2,
-                    threadDepth + threadOverlap,
-                    0,
-                    pitch,
-                    height,
-                    inset,
-                    frac,
-                )
-            )
+            .parametricCurve(helix(helixRadius, td, 0, pitch, height, inset, frac,))
             .val()
         )
         # print(f"major1={major1}")
@@ -174,22 +175,16 @@ def threadHelix(
         rv = cq.Solid.makeSolid(sh)
         # show(rv, "rv")
 
-    elif diaMajorCutOff == 0:
-        # One minor helix two major helixes
-        pass
-
-    elif diaMinorCutOff == 0:
-        # One minor helix two major helixes
-        pass
-
     else:
+        wires: cq.Wire = []
+
         # Two major and two  minor helixes
         # One major helix two minor helixes
         minor1 = (
             cq.Workplane("XY")
             .parametricCurve(
                 helix(
-                    diaMinor / 2,
+                    helixRadius,
                     0,
                     -diaMinorThreadHalfHeight,
                     pitch,
@@ -202,12 +197,13 @@ def threadHelix(
         )
         # print(f"minor1={minor1}")
         # show(minor1, "minor1")
+        wires.append(minor1)
 
         minor2 = (
             cq.Workplane("XY")
             .parametricCurve(
                 helix(
-                    diaMinor / 2,
+                    helixRadius,
                     0,
                     +diaMinorThreadHalfHeight,
                     pitch,
@@ -220,13 +216,14 @@ def threadHelix(
         )
         # print(f"minor2={minor2}")
         # show(minor2, "minor2")
+        wires.append(minor2)
 
         major1 = (
             cq.Workplane("XY")
             .parametricCurve(
                 helix(
-                    diaMinor / 2,
-                    threadDepth + threadOverlap,
+                    helixRadius,
+                    td,
                     -diaMajorThreadHalfHeight,
                     pitch,
                     height,
@@ -238,35 +235,53 @@ def threadHelix(
         )
         # print(f"major1={major1}")
         # show(major1, "major1")
+        wires.append(major1)
 
-        major2 = (
-            cq.Workplane("XY")
-            .parametricCurve(
-                helix(
-                    diaMinor / 2,
-                    threadDepth + threadOverlap,
-                    +diaMajorThreadHalfHeight,
-                    pitch,
-                    height,
-                    inset,
-                    frac,
+        if diaMajorThreadHalfHeight > 0:
+            # Add a four wire, bottom major
+            major2 = (
+                cq.Workplane("XY")
+                .parametricCurve(
+                    helix(
+                        helixRadius,
+                        td,
+                        +diaMajorThreadHalfHeight,
+                        pitch,
+                        height,
+                        inset,
+                        frac,
+                    )
                 )
+                .val()
             )
-            .val()
-        )
-        # print(f"major2={major2}")
-        # show(major2, "major2")
+            # print(f"major2={major2}")
+            # show(major2, "major2")
+            wires.append(major2)
 
-        f1 = cq.Face.makeRuledSurface(minor1, minor2)
-        # show(f1, "f1")
-        f2 = cq.Face.makeRuledSurface(major1, major2)
-        # show(f2, "f2")
-        f3 = cq.Face.makeRuledSurface(minor1, major1)
-        # show(f3, "f3")
-        f4 = cq.Face.makeRuledSurface(minor2, major2)
-        # show(f4, "f4")
+        lenWires = len(wires)
+        assert((lenWires == 3) or (lenWires == 4))
+        print(f"wires.len={len(wires)}")
 
-        sh = cq.Shell.makeShell([f1, f2, f3, f4])
+        faces: cq.Faces = []
+        faces.append(cq.Face.makeRuledSurface(wires[0], wires[1]))
+        faces.append(cq.Face.makeRuledSurface(wires[-2], wires[-1]))
+        faces.append(cq.Face.makeRuledSurface(wires[0], wires[2]))
+        if lenWires == 4:
+            faces.append(cq.Face.makeRuledSurface(wires[1], wires[-1]))
+        
+        sh = cq.Shell.makeShell(faces)
+
+        # f1 = cq.Face.makeRuledSurface(minor1, minor2)
+        # # show(f1, "f1")
+        # f2 = cq.Face.makeRuledSurface(major1, major2)
+        # # show(f2, "f2")
+        # f3 = cq.Face.makeRuledSurface(minor1, major1)
+        # # show(f3, "f3")
+        # f4 = cq.Face.makeRuledSurface(minor2, major2)
+        # # show(f4, "f4")
+
+        # sh = cq.Shell.makeShell([f1, f2, f3, f4])
+
         rv = cq.Solid.makeSolid(sh)
 
     # print(f"threadDepth={threadDepth}")
@@ -278,7 +293,7 @@ def threadHelix(
 pitch = 1
 angleDegs = 60
 inset = pitch / 4  # Adjust z by inset so threads are inset from the bottom?
-threadOverlap = 0  # Set to something like 0.001 if non-manifold
+threadOverlap = 1e-3 # Set to guarantee the thread and core overlap and a minifold is created
 stlTolerance = 1e-3
 
 nominalMajorDia = 8
@@ -294,66 +309,84 @@ boltRadius = boltDiameter / 2
 boltHeight = 10
 boltWallThickness = 2  # amount substracted from bolt radius to hollow out the bolt
 
-majorPd = 8
-minorPd = 4
+majorPd = None # 2
+minorPd = None # 8
 
-boltThreads, threadDepth = threadHelix(
-    boltHeight,
-    boltDiameter,
+# boltThreads, threadDepth = threadHelix(
+#     boltHeight,
+#     boltDiameter,
+#     pitch=pitch,
+#     angleDegs=60,
+#     diaMajorCutOffPitchDivisor=majorPd,
+#     diaMinorCutOffPitchDivisor=minorPd,
+#     threadOverlap=threadOverlap,
+#     inset=inset,
+#     frac=0.1,
+# )
+# print(f"threadDepth={threadDepth}")
+# boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
+# # print(f"boltThreadsBb={vars(boltThreadsBb)}")
+# # show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
+# # show(boltThreads, "botThreads-0")
+# 
+# 
+# boltCoreRadius = boltRadius - threadDepth + 0.001
+# print(f"boltCoreRadius={boltCoreRadius} boltRadius={boltRadius:.3f} threadDepth={threadDepth}")
+# 
+# boltCore = (
+#     cq.Workplane("XY", origin=(0, 0, 0))
+#     .circle(boltCoreRadius)
+#     .circle(boltCoreRadius - boltWallThickness)
+#     .extrude(boltHeight + (2 * inset))
+# )
+# boltCoreBb: cq.BoundBox = cast(cq.Shape, boltCore.val()).BoundingBox()
+# print(f"boltCoreBb={vars(boltCoreBb)}")
+# # show(boltCore.translate((radius * 4, 0, 0)), "boltCore+4")
+# # show(boltCore, "boltCore-0")
+# 
+# print("bolt begin union")
+# bolt = boltCore.union(boltThreads)
+# print("bolt end   union")
+# # show(bolt.translate((radius * 4, 0, 0)), "bolt+4")
+# show(bolt, "bolt-0")
+
+nutCore = (
+    cq.Workplane("XY", origin=(0, 0, 0))
+    .circle(nutRadius)
+    .polygon(6, nutSpan)
+    .extrude(nutHeight + (2 * inset))
+)
+nutCoreBb: cq.BoundBox = nutCore.val().BoundingBox()
+print(f"nutCoreBb={vars(nutCoreBb)}")
+# show(nutCore.translate((-radius * 4, 0, 0)), "nutCore-4")
+show(nutCore, "nutCore-0")
+
+nutThreads, threadDepth = threadHelix(
+    nutHeight,
+    nutDiameter,
     pitch=pitch,
     angleDegs=60,
-    diaMajorCutOffPitchDivisor=minorPd,
+    externalThreads=False,
+    diaMajorCutOffPitchDivisor=majorPd,
     diaMinorCutOffPitchDivisor=minorPd,
+    threadOverlap=threadOverlap,
     inset=inset,
     frac=0.1,
 )
-# print(f"threadDepth={threadDepth}")
-boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
-# print(f"boltThreadsBb={vars(boltThreadsBb)}")
-# show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
-# show(boltThreads, "botThreads-0")
+nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
+print(f"nutThreadsBb={vars(nutThreadsBb)}")
+# show(nutThreads.translate((-radius * 4, 0, 0)), "nutThreads-4")
+show(nutThreads, "nutThreads-0")
 
-
-boltCoreRadius = boltRadius - threadDepth + 0.001
-# print(f"boltCoreRadius={boltCoreRadius} boltRadius={boltRadius:.3f} threadDepth={threadDepth}")
-
-boltCore = (
-    cq.Workplane("XY", origin=(0, 0, 0))
-    .circle(boltCoreRadius)
-    .circle(boltCoreRadius - boltWallThickness)
-    .extrude(boltHeight + (2 * inset))
-)
-boltCoreBb: cq.BoundBox = cast(cq.Shape, boltCore.val()).BoundingBox()
-# print(f"boltCoreBb={vars(boltCoreBb)}")
-# show(boltCore.translate((radius * 4, 0, 0)), "boltCore+4")
-# show(boltCore, "boltCore-0")
-
-bolt = boltCore.union(boltThreads)
-# show(bolt.translate((radius * 4, 0, 0)), "bolt+4")
-show(bolt, "bolt-0")
-
-# nutCore = (
-#     cq.Workplane("XY", origin=(0, 0, -inset))
-#     .circle(nutRadius)
-#     .polygon(6, nutSpan)
-#     .extrude(nutHeight + 1.75 * inset)
-# )
-# # show(nutCore.translate((-radius * 4, 0, 0)), "nutCore-4")
-# # show(nutCore, "nutCore-0")
-#
-# nutThreads = thread(nutRadius + threadOverlap, -threadDepth, pitch, nutHeight, inset)
-# nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
-# print(f"nutThreadsBb={vars(nutThreadsBb)}")
-# # show(nutThreads.translate((-radius * 4, 0, 0)), "nutThreads-4")
-# # show(nutThreads, "nutThreads-0")
-# #
-# nut = nutCore.union(nutThreads)
+print("nut begin union")
+nut = nutCore.union(nutThreads)
+print("nut end   union")
 # # show(nut.translate((-radius * 4, 0, 0)), "nut-4")
 # show(nut, "nut-0")
 
 
-fname = f"bolt-dia_{boltDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{boltHeight:.3f}-mjPd_{majorPd}-miPd_{minorPd:}-to_{threadOverlap:.4f}-tol_{stlTolerance:.3f}.stl"
-cq.exporters.export(bolt, fname, tolerance=stlTolerance)
-#
+# fname = f"bolt-dia_{boltDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{boltHeight:.3f}-mjPd_{majorPd}-miPd_{minorPd:}-to_{threadOverlap:.4f}-tol_{stlTolerance:.3f}.stl"
+# cq.exporters.export(bolt, fname, tolerance=stlTolerance)
+# 
 # fname = f"nut-dia_{nutDiameter:.3f}-pitch_{pitch:.3f}-depth_{threadDepth:.3f}-height_{nutHeight:.3f}-mjPd_{majorPd}-miPd_{minorPd}-to_{threadOverlap:.4f}-tol_{stlTolerance:.3f}.stl"
 # cq.exporters.export(nut, fname, tolerance=stlTolerance)
