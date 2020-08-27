@@ -1,5 +1,5 @@
 
-.PHONY: all, format
+.PHONY: all, format, f, e, c, p
 
 app=thread4.py
 
@@ -13,9 +13,11 @@ all:
 p:
 	python ${app}
 
+e: c
 c:
 	cq-editor ${app}
 
+format: f
 f:
 	isort *.py
 	black *.py
