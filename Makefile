@@ -1,7 +1,7 @@
 
-.PHONY: all, format, f, e, c, p
+.PHONY: all, format, f, e, c, p, t
 
-app=thread4.py
+app=thread5.py
 
 all:
 	@echo "make <target>"
@@ -22,3 +22,6 @@ f:
 	isort *.py
 	black *.py
 	flake8 *.py
+
+t:
+	pytest
