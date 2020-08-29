@@ -13,7 +13,7 @@ setCtx(globals())
 helixCount: int = 0
 
 
-def threadHelix(
+def threads(
     height: float,
     diaMajor: float,
     pitch: float = 1,
@@ -46,9 +46,9 @@ def threadHelix(
     :returns: Solid representing the threads and float dept
     """
 
-    # print(f"threadHelix:+ height={height:.3f} diaMajor={diaMajor:.3f} pitch={pitch:.3f} angleDegs={angleDegs:.3f} externalThreads={externalThreads}")
-    # print(f"threadHelix: diaMajorCutOffPitchDivisor={diaMajorCutOffPitchDivisor} diaMinorCutOffPitchDivisor={diaMinorCutOffPitchDivisor}")
-    # print(f"threadHelix: threadOverlap={threadOverlap:.3f} inset={inset:.3f} cvrgFactor={cvrgFactor:.3f}")
+    # print(f"threads:+ height={height:.3f} diaMajor={diaMajor:.3f} pitch={pitch:.3f} angleDegs={angleDegs:.3f} externalThreads={externalThreads}")
+    # print(f"threads: diaMajorCutOffPitchDivisor={diaMajorCutOffPitchDivisor} diaMinorCutOffPitchDivisor={diaMinorCutOffPitchDivisor}")
+    # print(f"threads: threadOverlap={threadOverlap:.3f} inset={inset:.3f} cvrgFactor={cvrgFactor:.3f}")
 
     angleRadians: float = radians(angleDegs)
     tanAngle: float = tan(angleRadians)
@@ -58,15 +58,15 @@ def threadHelix(
     diaMinorCutOff: float = (pitch / diaMinorCutOffPitchDivisor) if (
         diaMinorCutOffPitchDivisor is not None
     ) else 0
-    # print(f"threadHelix: diaMajorCutOff={diaMajorCutOff:.3f} diaMinorCutOff={diaMinorCutOff:.3f}")
+    # print(f"threads: diaMajorCutOff={diaMajorCutOff:.3f} diaMinorCutOff={diaMinorCutOff:.3f}")
     diaMajorThreadHalfHeight: float = diaMajorCutOff / 2
     diaMinorThreadHalfHeight: float = (pitch - diaMinorCutOff) / 2
-    # print(f"threadHelix: diaMajorThreadHalfHeight={diaMajorThreadHalfHeight:.3f} diaMinorThreadHalfHeight={diaMinorThreadHalfHeight:.3f} threadDepth={threadDepth:.3f}")
+    # print(f"threads: diaMajorThreadHalfHeight={diaMajorThreadHalfHeight:.3f} diaMinorThreadHalfHeight={diaMinorThreadHalfHeight:.3f} threadDepth={threadDepth:.3f}")
     diaMajorToTip: float = diaMajorThreadHalfHeight * tanAngle
     diaMinorToTip: float = diaMinorThreadHalfHeight * tanAngle
-    # print(f"threadHelix: diaMajorToTip={diaMajorToTip:.3f} diaMinorToTip={diaMinorToTip:.3f}")
+    # print(f"threads: diaMajorToTip={diaMajorToTip:.3f} diaMinorToTip={diaMinorToTip:.3f}")
     threadDepth: float = diaMinorToTip - diaMajorToTip
-    # print(f"threadHelix: threadDepth={threadDepth}")
+    # print(f"threads: threadDepth={threadDepth}")
 
     helixRadius: float
     td: float
@@ -85,7 +85,7 @@ def threadHelix(
 
     rv: cq.Solid = None
 
-    # print(f"threadHelix: diaMajor={diaMajor:.3f} helixRadius={helixRadius:.3f} td={td:.3f}")
+    # print(f"threads: diaMajor={diaMajor:.3f} helixRadius={helixRadius:.3f} td={td:.3f}")
 
     wires: cq.Wire = []
 
@@ -104,7 +104,7 @@ def threadHelix(
         )
         .val()
     )
-    # print(f"threadHelix: wires[0]={wires[0]}")
+    # print(f"threads: wires[0]={wires[0]}")
     # show(wires[0], "wires[0]")
 
     wires.append(
@@ -122,7 +122,7 @@ def threadHelix(
         )
         .val()
     )
-    # print(f"threadHelix: wires[1]={wires[1]}")
+    # print(f"threads: wires[1]={wires[1]}")
     # show(wires[1], "wires[1]")
 
     wires.append(
@@ -140,7 +140,7 @@ def threadHelix(
         )
         .val()
     )
-    # print(f"threadHelix: wires[2]={wires[2]}")
+    # print(f"threads: wires[2]={wires[2]}")
     # show(wires[2], "wires[2]")
 
     if diaMajorThreadHalfHeight > 0:
@@ -160,12 +160,12 @@ def threadHelix(
             )
             .val()
         )
-        # print(f"threadHelix: wires[3]={wires[3]}")
+        # print(f"threads: wires[3]={wires[3]}")
         # show(wires[3], "wires[3]")
 
     lenWires = len(wires)
     assert (lenWires == 3) or (lenWires == 4)
-    # print(f"threadHelix: wires.len={len(wires)}")
+    # print(f"threads: wires.len={len(wires)}")
 
     # Create the faces of the thread and then create a solid
     faces: cq.Faces = []
@@ -177,7 +177,7 @@ def threadHelix(
     sh = cq.Shell.makeShell(faces)
     rv = cq.Solid.makeSolid(sh)
 
-    # print(f"threadHelix:- threadDepth={threadDepth} rv={rv}")
+    # print(f"threads:- threadDepth={threadDepth} rv={rv}")
     # show(rv, "rv")
 
     return rv, threadDepth
@@ -209,7 +209,7 @@ boltSpan = nutSpan
 majorPd = 8  # None
 minorPd = 4  # None
 
-boltThreads, threadDepth = threadHelix(
+boltThreads, threadDepth = threads(
     height=boltHeight,
     diaMajor=boltDiameter,
     pitch=pitch,
@@ -266,7 +266,7 @@ nutCoreBb: cq.BoundBox = nutCore.val().BoundingBox()
 # print(f"nutCoreBb={vars(nutCoreBb)}")
 # show(nutCore, "nutCore-0")
 
-nutThreads, threadDepth = threadHelix(
+nutThreads, threadDepth = threads(
     height=nutHeight,
     diaMajor=nutDiameter,
     pitch=pitch,
