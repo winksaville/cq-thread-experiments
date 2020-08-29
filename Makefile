@@ -6,9 +6,10 @@ app=thread5.py
 all:
 	@echo "make <target>"
 	@echo "targets:"
-	@echo "f   # Format"
-	@echo "e   # Run with cq-editor"
-	@echo "p   # Run with python"
+	@echo " f|format   # Format"
+	@echo " e|c        # Run with cq-editor"
+	@echo " p          # Run with python"
+	@echo " t          # Run pytest"
 
 p:
 	python ${app}
