@@ -4,7 +4,8 @@ from typing import Tuple, Union, cast
 
 import cadquery as cq
 
-from convergingHelix import convergingHelix as cHelix
+from taperable_helix import helix
+
 from wing_utils import setCtx, show
 
 setCtx(globals())
@@ -23,7 +24,7 @@ def threads(
     diaMinorCutOffPitchDivisor: Union[float, None] = 4,
     threadOverlap: float = 0.0001,
     inset: float = 0,
-    cvrgFactor: float = 0.10,
+    taper_rpos: float = 0.10,
 ) -> Tuple[cq.Solid, float]:
     """
     Create a thread helix which may be triangular or trapizodal.
@@ -42,13 +43,13 @@ def threads(
     :param threadOverlap: amount to increase alter dimensions so threads and core overlap
     and a manifold is created
     :param inset: number units in the z direction
-    :param cvrgFactor: percent of threads for fade in and fade out
+    :param taper_rpos: percent of threads which are tapered at the ends
     :returns: Solid representing the threads and float dept
     """
 
     # print(f"threads:+ height={height:.3f} diaMajor={diaMajor:.3f} pitch={pitch:.3f} angleDegs={angleDegs:.3f} externalThreads={externalThreads}")
     # print(f"threads: diaMajorCutOffPitchDivisor={diaMajorCutOffPitchDivisor} diaMinorCutOffPitchDivisor={diaMinorCutOffPitchDivisor}")
-    # print(f"threads: threadOverlap={threadOverlap:.3f} inset={inset:.3f} cvrgFactor={cvrgFactor:.3f}")
+    # print(f"threads: threadOverlap={threadOverlap:.3f} inset={inset:.3f} taper_rpos={taper_rpos:.3f}")
 
     angleRadians: float = radians(angleDegs)
     tanAngle: float = tan(angleRadians)
@@ -92,12 +93,12 @@ def threads(
     wires.append(
         cq.Workplane("XY")
         .parametricCurve(
-            cHelix(
+            helix(
                 helixRadius,
                 pitch,
                 height,
+                taper_rpos,
                 inset,
-                cvrgFactor,
                 0,
                 -helixThreadHalfHeightAtRadius,
             )
@@ -110,12 +111,12 @@ def threads(
     wires.append(
         cq.Workplane("XY")
         .parametricCurve(
-            cHelix(
+            helix(
                 helixRadius,
                 pitch,
                 height,
+                taper_rpos,
                 inset,
-                cvrgFactor,
                 0,
                 +helixThreadHalfHeightAtRadius,
             )
@@ -128,12 +129,12 @@ def threads(
     wires.append(
         cq.Workplane("XY")
         .parametricCurve(
-            cHelix(
+            helix(
                 helixRadius,
                 pitch,
                 height,
+                taper_rpos,
                 inset,
-                cvrgFactor,
                 td,
                 -helixThreadHalfHeightOppositeRadius,
             )
@@ -148,12 +149,12 @@ def threads(
         wires.append(
             cq.Workplane("XY")
             .parametricCurve(
-                cHelix(
+                helix(
                     helixRadius,
                     pitch,
                     height,
+                    taper_rpos,
                     inset,
-                    cvrgFactor,
                     td,
                     +helixThreadHalfHeightOppositeRadius,
                 )
@@ -218,7 +219,7 @@ boltThreads, threadDepth = threads(
     diaMinorCutOffPitchDivisor=minorPd * 1.1,
     threadOverlap=threadOverlap,
     inset=inset,
-    cvrgFactor=0.1,
+    taper_rpos=0.1,
 )
 # print(f"threadDepth={threadDepth}")
 boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
@@ -276,7 +277,7 @@ nutThreads, threadDepth = threads(
     diaMinorCutOffPitchDivisor=minorPd,
     threadOverlap=threadOverlap,
     inset=inset,
-    cvrgFactor=0.1,
+    taper_rpos=0.1,
 )
 nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
 # print(f"nutThreadsBb={vars(nutThreadsBb)}")
