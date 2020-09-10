@@ -26,7 +26,7 @@ nutRadius = nutDiameter / 2
 nutHeight = 4 + (2 * inset)
 nutSpan = 12  # Nut circumference and distance between flats
 
-boltAdjustment = 0.15
+boltAdjustment = 0.10
 boltDiameter = nominalMajorDia - boltAdjustment
 boltRadius = boltDiameter / 2
 boltHeight = 10 + (2 * inset)
@@ -40,11 +40,11 @@ taper_rpos = 0.1
 
 boltThreads, threadDepth = threads(
     height=boltHeight,
-    dia_major=boltDiameter,
     pitch=pitch,
+    dia_major=boltDiameter,
     angle_degs=angle_degs,
-    dia_major_cutoff_pitch_divisor=majorPd * 1.1,
-    dia_minor_cutoff_pitch_divisor=minorPd * 1.1,
+    dia_major_cutoff_pitch_divisor=majorPd,  # * 1.1,
+    dia_minor_cutoff_pitch_divisor=minorPd,  # * 1.1,
     thread_overlap=thread_overlap,
     inset=inset,
     taper_rpos=taper_rpos,
@@ -97,8 +97,8 @@ nutCoreBb: cq.BoundBox = nutCore.val().BoundingBox()
 
 nutThreads, threadDepth = threads(
     height=nutHeight,
-    dia_major=nutDiameter,
     pitch=pitch,
+    dia_major=nutDiameter,
     angle_degs=angle_degs,
     external_threads=False,
     dia_major_cutoff_pitch_divisor=majorPd,

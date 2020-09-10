@@ -14,8 +14,8 @@ helixCount: int = 0
 
 def threads(
     height: float,
+    pitch: float,
     dia_major: float,
-    pitch: float = 1,
     angle_degs: float = 60,
     external_threads: bool = True,
     dia_major_cutoff_pitch_divisor: Union[float, None] = 8,
@@ -68,23 +68,23 @@ def threads(
     # print(f"threads: threadDepth={threadDepth}")
 
     helix_radius: float
-    td: float
+    thread_depth_plus_overlap: float
     if external_threads:
         # External threads
         helix_radius = (dia_major / 2) - (thread_depth + thread_overlap)
         thread_half_height_at_helix_radius = (pitch - dia_minor_cutoff) / 2
         thread_half_height_at_opposite_helix_radius = dia_major_cutoff / 2
-        td = thread_depth + thread_overlap
+        thread_depth_plus_overlap = thread_depth + thread_overlap
     else:
         # Internal threads
         helix_radius = (dia_major / 2) + thread_overlap
         thread_half_height_at_helix_radius = (pitch - dia_major_cutoff) / 2
         thread_half_height_at_opposite_helix_radius = dia_minor_cutoff / 2
-        td = -(thread_depth + thread_overlap)
+        thread_depth_plus_overlap = -(thread_depth + thread_overlap)
 
     rv: cq.Solid = None
 
-    # print(f"threads: dia_major={dia_major:.3f} helix_radius={helix_radius:.3f} td={td:.3f}")
+    # print(f"threads: dia_major={dia_major:.3f} helix_radius={helix_radius:.3f} thread_depth_plus_overlap={thread_depth_plus_overlap:.3f}")
 
     wires: cq.Wire = []
 
@@ -133,7 +133,7 @@ def threads(
                 height,
                 taper_rpos,
                 inset,
-                td,
+                thread_depth_plus_overlap,
                 -thread_half_height_at_opposite_helix_radius,
             )
         )
@@ -153,7 +153,7 @@ def threads(
                     height,
                     taper_rpos,
                     inset,
-                    td,
+                    thread_depth_plus_overlap,
                     +thread_half_height_at_opposite_helix_radius,
                 )
             )
