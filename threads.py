@@ -14,13 +14,13 @@ helixCount: int = 0
 
 def threads(
     height: float,
-    diaMajor: float,
+    dia_major: float,
     pitch: float = 1,
-    angleDegs: float = 60,
-    externalThreads: bool = True,
-    diaMajorCutOffPitchDivisor: Union[float, None] = 8,
-    diaMinorCutOffPitchDivisor: Union[float, None] = 4,
-    threadOverlap: float = 0.0001,
+    angle_degs: float = 60,
+    external_threads: bool = True,
+    dia_major_cutoff_pitch_divisor: Union[float, None] = 8,
+    dia_minor_cutoff_pitch_divisor: Union[float, None] = 4,
+    thread_overlap: float = 0.0001,
     inset: float = 0,
     taper_rpos: float = 0.10,
 ) -> Tuple[cq.Solid, float]:
@@ -31,60 +31,60 @@ def threads(
     the various using the parameters.
 
     :param height: Height including top and bottom inset
-    :param diaMajor: Diameter of threads its largest dimension
+    :param dia_major: Diameter of threads its largest dimension
     :param pitch: Peek to Peek measurement of the threads in units default is mm
-    :param angleDegs: Angle of the thread profile in degrees
-    :param diaMajorCutOffPitchDivisor: is v in pitch/v to determine size of MajorCutOff
-    typically None for nuts as there is overlap with the nut barrel
-    :param diaMinorCutOffPitchDivisor: is v in pitch/v to determin size of MinorCutOff
-    typically None for bolts so there is overlap with the stud
-    :param threadOverlap: amount to increase alter dimensions so threads and core overlap
-    and a manifold is created
+    :param angle_degs: Angle of the thread profile in degrees
+    :param dia_major_cutoff_pitch_divisor: is v in pitch/v to determine size of MajorCutOff
+        typically None for nuts as there is overlap with the nut barrel
+    :param dia_minor_cutoff_pitch_divisor: is v in pitch/v to determin size of MinorCutOff
+        typically None for bolts so there is overlap with the stud
+    :param thread_overlap: amount to increase alter dimensions so threads and core overlap
+        and a manifold is created
     :param inset: number units in the z direction
     :param taper_rpos: percent of threads which are tapered at the ends
     :returns: Solid representing the threads and float dept
     """
 
-    # print(f"threads:+ height={height:.3f} diaMajor={diaMajor:.3f} pitch={pitch:.3f} angleDegs={angleDegs:.3f} externalThreads={externalThreads}")
-    # print(f"threads: diaMajorCutOffPitchDivisor={diaMajorCutOffPitchDivisor} diaMinorCutOffPitchDivisor={diaMinorCutOffPitchDivisor}")
-    # print(f"threads: threadOverlap={threadOverlap:.3f} inset={inset:.3f} taper_rpos={taper_rpos:.3f}")
+    # print(f"threads:+ height={height:.3f} dia_major={dia_major:.3f} pitch={pitch:.3f} angle_degs={angle_degs:.3f} external_threads={external_threads}")
+    # print(f"threads: dia_major_cutoff_pitch_divisor={dia_major_cutoff_pitch_divisor} dia_minor_cutoff_pitch_divisor={dia_minor_cutoff_pitch_divisor}")
+    # print(f"threads: thread_overlap={thread_overlap:.3f} inset={inset:.3f} taper_rpos={taper_rpos:.3f}")
 
-    angleRadians: float = radians(angleDegs)
-    tanAngle: float = tan(angleRadians)
-    diaMajorCutOff: float = (pitch / diaMajorCutOffPitchDivisor) if (
-        diaMajorCutOffPitchDivisor is not None
+    angle_radians: float = radians(angle_degs)
+    tan_angle: float = tan(angle_radians)
+    dia_major_cutoff: float = (pitch / dia_major_cutoff_pitch_divisor) if (
+        dia_major_cutoff_pitch_divisor is not None
     ) else 0
-    diaMinorCutOff: float = (pitch / diaMinorCutOffPitchDivisor) if (
-        diaMinorCutOffPitchDivisor is not None
+    dia_minor_cutoff: float = (pitch / dia_minor_cutoff_pitch_divisor) if (
+        dia_minor_cutoff_pitch_divisor is not None
     ) else 0
-    # print(f"threads: diaMajorCutOff={diaMajorCutOff:.3f} diaMinorCutOff={diaMinorCutOff:.3f}")
-    diaMajorThreadHalfHeight: float = diaMajorCutOff / 2
-    diaMinorThreadHalfHeight: float = (pitch - diaMinorCutOff) / 2
-    # print(f"threads: diaMajorThreadHalfHeight={diaMajorThreadHalfHeight:.3f} diaMinorThreadHalfHeight={diaMinorThreadHalfHeight:.3f} threadDepth={threadDepth:.3f}")
-    diaMajorToTip: float = diaMajorThreadHalfHeight * tanAngle
-    diaMinorToTip: float = diaMinorThreadHalfHeight * tanAngle
-    # print(f"threads: diaMajorToTip={diaMajorToTip:.3f} diaMinorToTip={diaMinorToTip:.3f}")
-    threadDepth: float = diaMinorToTip - diaMajorToTip
+    # print(f"threads: dia_majorCutOff={dia_majorCutOff:.3f} diaMinorCutOff={diaMinorCutOff:.3f}")
+    dia_major_thread_half_height: float = dia_major_cutoff / 2
+    dia_minor_thread_half_height: float = (pitch - dia_minor_cutoff) / 2
+    # print(f"threads: dia_majorThreadHalfHeight={dia_majorThreadHalfHeight:.3f} diaMinorThreadHalfHeight={diaMinorThreadHalfHeight:.3f} threadDepth={threadDepth:.3f}")
+    tip_to_dia_major: float = dia_major_thread_half_height * tan_angle
+    tip_to_dia_minor: float = dia_minor_thread_half_height * tan_angle
+    # print(f"threads: dia_majorToTip={dia_majorToTip:.3f} diaMinorToTip={diaMinorToTip:.3f}")
+    thread_depth: float = tip_to_dia_minor - tip_to_dia_major
     # print(f"threads: threadDepth={threadDepth}")
 
-    helixRadius: float
+    helix_radius: float
     td: float
-    if externalThreads:
+    if external_threads:
         # External threads
-        helixRadius = (diaMajor / 2) - (threadDepth + threadOverlap)
-        helixThreadHalfHeightAtRadius = (pitch - diaMinorCutOff) / 2
-        helixThreadHalfHeightOppositeRadius = diaMajorCutOff / 2
-        td = threadDepth + threadOverlap
+        helix_radius = (dia_major / 2) - (thread_depth + thread_overlap)
+        thread_half_height_at_helix_radius = (pitch - dia_minor_cutoff) / 2
+        thread_half_height_at_opposite_helix_radius = dia_major_cutoff / 2
+        td = thread_depth + thread_overlap
     else:
         # Internal threads
-        helixRadius = (diaMajor / 2) + threadOverlap
-        helixThreadHalfHeightAtRadius = (pitch - diaMajorCutOff) / 2
-        helixThreadHalfHeightOppositeRadius = diaMinorCutOff / 2
-        td = -(threadDepth + threadOverlap)
+        helix_radius = (dia_major / 2) + thread_overlap
+        thread_half_height_at_helix_radius = (pitch - dia_major_cutoff) / 2
+        thread_half_height_at_opposite_helix_radius = dia_minor_cutoff / 2
+        td = -(thread_depth + thread_overlap)
 
     rv: cq.Solid = None
 
-    # print(f"threads: diaMajor={diaMajor:.3f} helixRadius={helixRadius:.3f} td={td:.3f}")
+    # print(f"threads: dia_major={dia_major:.3f} helix_radius={helix_radius:.3f} td={td:.3f}")
 
     wires: cq.Wire = []
 
@@ -92,13 +92,13 @@ def threads(
         cq.Workplane("XY")
         .parametricCurve(
             helix(
-                helixRadius,
+                helix_radius,
                 pitch,
                 height,
                 taper_rpos,
                 inset,
                 0,
-                -helixThreadHalfHeightAtRadius,
+                -thread_half_height_at_helix_radius,
             )
         )
         .val()
@@ -110,13 +110,13 @@ def threads(
         cq.Workplane("XY")
         .parametricCurve(
             helix(
-                helixRadius,
+                helix_radius,
                 pitch,
                 height,
                 taper_rpos,
                 inset,
                 0,
-                +helixThreadHalfHeightAtRadius,
+                +thread_half_height_at_helix_radius,
             )
         )
         .val()
@@ -128,13 +128,13 @@ def threads(
         cq.Workplane("XY")
         .parametricCurve(
             helix(
-                helixRadius,
+                helix_radius,
                 pitch,
                 height,
                 taper_rpos,
                 inset,
                 td,
-                -helixThreadHalfHeightOppositeRadius,
+                -thread_half_height_at_opposite_helix_radius,
             )
         )
         .val()
@@ -142,19 +142,19 @@ def threads(
     # print(f"threads: wires[2]={wires[2]}")
     # show(wires[2], "wires[2]")
 
-    if diaMajorThreadHalfHeight > 0:
+    if dia_major_thread_half_height > 0:
         # Add a four wire, bottom major
         wires.append(
             cq.Workplane("XY")
             .parametricCurve(
                 helix(
-                    helixRadius,
+                    helix_radius,
                     pitch,
                     height,
                     taper_rpos,
                     inset,
                     td,
-                    +helixThreadHalfHeightOppositeRadius,
+                    +thread_half_height_at_opposite_helix_radius,
                 )
             )
             .val()
@@ -179,4 +179,4 @@ def threads(
     # print(f"threads:- threadDepth={threadDepth} rv={rv}")
     # show(rv, "rv")
 
-    return rv, threadDepth
+    return rv, thread_depth
