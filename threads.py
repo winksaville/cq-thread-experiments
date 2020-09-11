@@ -1,5 +1,6 @@
+from dataclasses import dataclass
 from math import atan, cos, degrees, pi, radians, sin, tan
-from typing import Tuple, Union, cast
+from typing import List, Tuple, Union, cast
 
 import cadquery as cq
 from taperable_helix import helix
@@ -10,6 +11,13 @@ setCtx(globals())
 
 
 helixCount: int = 0
+
+
+@dataclass
+class HelixLocation:
+    radius: float
+    horz_offset: float
+    vert_offset: float
 
 
 class ThreadDimensions:
@@ -42,6 +50,8 @@ class ThreadDimensions:
     thread_depth_plus_overlap: float
     thread_half_height_at_helix_radius: float
     thread_half_height_at_opposite_helix_radius: float
+
+    helixes: List[HelixLocation] = []
 
     def __init__(
         self,
@@ -93,7 +103,7 @@ class ThreadDimensions:
         # print(f"ThreadDimensions: threadDepth={threadDepth}")
 
         if external_threads:
-            # External threads
+            # External threads have helix radius at the dia_minor side
             self.helix_radius = (dia_major / 2) - (self.thread_depth + thread_overlap)
             self.thread_half_height_at_helix_radius = (
                 pitch - self.dia_minor_cutoff
@@ -101,13 +111,45 @@ class ThreadDimensions:
             self.thread_half_height_at_opposite_helix_radius = self.dia_major_cutoff / 2
             self.thread_depth_plus_overlap = self.thread_depth + thread_overlap
         else:
-            # Internal threads
+            # Internal threads have helix thread at the dia_major side
+            # and the horz_offset
             self.helix_radius = (dia_major / 2) + thread_overlap
             self.thread_half_height_at_helix_radius = (
                 pitch - self.dia_major_cutoff
             ) / 2
             self.thread_half_height_at_opposite_helix_radius = self.dia_minor_cutoff / 2
             self.thread_depth_plus_overlap = -(self.thread_depth + thread_overlap)
+
+        self.helixes = []
+        self.helixes.append(
+            HelixLocation(
+                radius=self.helix_radius,
+                horz_offset=0,
+                vert_offset=-self.thread_half_height_at_helix_radius,
+            )
+        )
+        self.helixes.append(
+            HelixLocation(
+                radius=self.helix_radius,
+                horz_offset=0,
+                vert_offset=+self.thread_half_height_at_helix_radius,
+            )
+        )
+        self.helixes.append(
+            HelixLocation(
+                radius=self.helix_radius,
+                horz_offset=self.thread_depth_plus_overlap,
+                vert_offset=-self.thread_half_height_at_opposite_helix_radius,
+            )
+        )
+        if self.dia_major_cutoff > 0:
+            self.helixes.append(
+                HelixLocation(
+                    radius=self.helix_radius,
+                    horz_offset=self.thread_depth_plus_overlap,
+                    vert_offset=+self.thread_half_height_at_opposite_helix_radius,
+                )
+            )
 
         # print(f"ThreadDimensions: threadDepth={threadDepth}")
 
@@ -161,83 +203,26 @@ def threads(
         inset,
         taper_rpos,
     )
-    print(f"td={vars(td)}")
+    # print(f"td={vars(td)}")
 
-    wires: cq.Wire = []
-
-    wires.append(
-        cq.Workplane("XY")
-        .parametricCurve(
-            helix(
-                td.helix_radius,
-                pitch,
-                height,
-                taper_rpos,
-                inset,
-                0,
-                -td.thread_half_height_at_helix_radius,
-            )
-        )
-        .val()
-    )
-    # print(f"threads: wires[0]={wires[0]}")
-    # show(wires[0], "wires[0]")
-
-    wires.append(
-        cq.Workplane("XY")
-        .parametricCurve(
-            helix(
-                td.helix_radius,
-                pitch,
-                height,
-                taper_rpos,
-                inset,
-                0,
-                +td.thread_half_height_at_helix_radius,
-            )
-        )
-        .val()
-    )
-    # print(f"threads: wires[1]={wires[1]}")
-    # show(wires[1], "wires[1]")
-
-    wires.append(
-        cq.Workplane("XY")
-        .parametricCurve(
-            helix(
-                td.helix_radius,
-                pitch,
-                height,
-                taper_rpos,
-                inset,
-                td.thread_depth_plus_overlap,
-                -td.thread_half_height_at_opposite_helix_radius,
-            )
-        )
-        .val()
-    )
-    # print(f"threads: wires[2]={wires[2]}")
-    # show(wires[2], "wires[2]")
-
-    if td.dia_major_cutoff > 0:
-        # Add a fourth wire, bottom major
-        wires.append(
+    wires: cq.Wire = [
+        (
             cq.Workplane("XY")
             .parametricCurve(
                 helix(
-                    td.helix_radius,
-                    pitch,
-                    height,
-                    taper_rpos,
-                    inset,
-                    td.thread_depth_plus_overlap,
-                    +td.thread_half_height_at_opposite_helix_radius,
+                    radius=hx.radius,
+                    pitch=pitch,
+                    height=height,
+                    taper_rpos=taper_rpos,
+                    inset_offset=inset,
+                    horz_offset=hx.horz_offset,
+                    vert_offset=hx.vert_offset,
                 )
             )
             .val()
         )
-        # print(f"threads: wires[3]={wires[3]}")
-        # show(wires[3], "wires[3]")
+        for hx in td.helixes
+    ]
 
     lenWires = len(wires)
     assert (lenWires == 3) or (lenWires == 4)
