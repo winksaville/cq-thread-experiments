@@ -1,6 +1,6 @@
 import sys
 from functools import reduce
-from math import radians
+from math import radians, sqrt
 from typing import List, Sequence, Tuple, Union, cast
 
 # import cadquery as cq
@@ -274,6 +274,23 @@ def split_2d(
     #     f"slipt_2d:- lst={lst} linePt1={linePt1} linePt2={linePt2} retAbove={retAbove}"
     # )
     return newList
+
+
+def perpendicular_distance_pt_to_line_2d(
+    pt: Tuple[float, float], linePt1: Tuple[float, float], linePt2: Tuple[float, float],
+) -> float:
+    """
+    Returns distance from pt to line define by linePt1 and linePt2.
+    From: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+    "Line defined by two points"
+    """
+    ydist: float = yDist_2d(linePt2, linePt1)
+    xdist: float = xDist_2d(linePt2, linePt1)
+    n: float = abs((ydist * pt[0]) - (xdist * pt[1]) + crossProdPts(linePt2, linePt1))
+    d: float = sqrt((ydist * ydist) + (xdist * xdist))
+    dist: float = n / d
+    # print(f"dist={dist} ydist={ydist} xdist={xdist} n={n} d={d}")
+    return dist
 
 
 def valid(wp: Union[cq.Workplane, Sequence[cq.Workplane]]) -> bool:
