@@ -74,9 +74,11 @@ def test_ext_clearance(external_threads, major_pd, minor_pd, ext_clearance, thre
         f"intpts: thread_overlap={thread_dims.thread_overlap} thread_overlap_vert_adj={thread_dims.thread_overlap_vert_adj}"
     )
     intpts = []
+    x: float
+    y: float
     for hl in thread_dims.helixes:
-        x: float = hl.radius + hl.horz_offset - thread_dims.thread_overlap
-        y: float = hl.vert_offset
+        x = hl.radius + hl.horz_offset - thread_dims.thread_overlap
+        y = hl.vert_offset
         # print(f"tloop: hl={hl} x={x} y={y}")
         if thread_dims.thread_overlap > 0 and hl.horz_offset == 0:
             # print("hl.horz_offset == 0")
@@ -102,9 +104,8 @@ def test_ext_clearance(external_threads, major_pd, minor_pd, ext_clearance, thre
     # )
     extpts = []
     for hl in thread_dims.ext_helixes:
-        pt: Tuple[float, float]
-        x: float = hl.radius + hl.horz_offset + thread_dims.thread_overlap
-        y: float = hl.vert_offset
+        x = hl.radius + hl.horz_offset + thread_dims.thread_overlap
+        y = hl.vert_offset
         # print(f"tloop: hl={hl} x={x} y={y}")
         if thread_dims.thread_overlap > 0 and hl.horz_offset == 0:
             # print("hl.horz_offset == 0")
@@ -147,8 +148,8 @@ def test_ext_clearance(external_threads, major_pd, minor_pd, ext_clearance, thre
     print(f" intL_minor={intL_minor:.10f}")
     # assert isclose(intL_minor, ext_clearance)
 
-    assert isclose(ext0_slope, ext_clearance)
-    #assert isclose(extL_slope, ext_clearance)
+    # assert isclose(ext0_slope, ext_clearance)
+    # assert isclose(extL_slope, ext_clearance)
     assert isclose(ext2_major, ext_clearance)
     assert isclose(extL_major, ext_clearance)
     assert isclose(int2_minor, ext_clearance)
