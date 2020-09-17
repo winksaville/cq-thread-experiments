@@ -30,8 +30,8 @@ class ThreadDimensions:
     dia_major: float
     angle_degs: float
     external_threads: bool
-    dia_major_cutoff_pitch_divisor: Union[float, None]
-    dia_minor_cutoff_pitch_divisor: Union[float, None]
+    dia_major_cutoff_pitch_divisor: Union[float]
+    dia_minor_cutoff_pitch_divisor: Union[float]
     thread_overlap: float
     inset: float
     taper_rpos: float
@@ -67,8 +67,8 @@ class ThreadDimensions:
         dia_major: float,
         angle_degs: float,
         external_threads: bool,
-        dia_major_cutoff_pitch_divisor: Union[float, None],
-        dia_minor_cutoff_pitch_divisor: Union[float, None],
+        dia_major_cutoff_pitch_divisor: Union[float],
+        dia_minor_cutoff_pitch_divisor: Union[float],
         thread_overlap: float,
         inset: float,
         taper_rpos: float,
@@ -101,12 +101,12 @@ class ThreadDimensions:
         self.sin_hangle = sin(self.angle_radians / 2)
         self.dia_major_cutoff = (
             (pitch / dia_major_cutoff_pitch_divisor)
-            if (dia_major_cutoff_pitch_divisor is not None)
+            if (dia_major_cutoff_pitch_divisor != 0)
             else 0
         )
         self.dia_minor_cutoff = (
             (pitch / dia_minor_cutoff_pitch_divisor)
-            if (dia_minor_cutoff_pitch_divisor is not None)
+            if (dia_minor_cutoff_pitch_divisor != 0)
             else 0
         )
         self.dia_major_thread_half_height: float = self.dia_major_cutoff / 2
@@ -157,7 +157,7 @@ class ThreadDimensions:
                 vert_offset=+self.thread_half_height_at_opposite_helix_radius,
             )
         )
-        if self.dia_major_cutoff > 0:
+        if self.dia_minor_cutoff > 0:
             self.helixes.append(
                 HelixLocation(
                     radius=self.helix_radius + self.thread_overlap,
@@ -229,8 +229,8 @@ def threads(
     dia_major: float,
     angle_degs: float = 60,
     external_threads: bool = True,
-    dia_major_cutoff_pitch_divisor: Union[float, None] = 8,
-    dia_minor_cutoff_pitch_divisor: Union[float, None] = 4,
+    dia_major_cutoff_pitch_divisor: Union[float] = 8,
+    dia_minor_cutoff_pitch_divisor: Union[float] = 4,
     thread_overlap: float = 0.0001,
     inset: float = 0,
     taper_rpos: float = 0.10,
@@ -247,9 +247,9 @@ def threads(
     :param pitch: Peek to Peek measurement of the threads in units default is mm
     :param angle_degs: Angle of the thread profile in degrees
     :param dia_major_cutoff_pitch_divisor: is v in pitch/v to determine size of MajorCutOff
-        typically None for nuts as there is overlap with the nut barrel
+        0 for no MajorCutOff
     :param dia_minor_cutoff_pitch_divisor: is v in pitch/v to determin size of MinorCutOff
-        typically None for bolts so there is overlap with the stud
+        0 for no MinorCutOff
     :param thread_overlap: amount to increase alter dimensions so threads and core overlap
         and a manifold is created
     :param inset: number units in the z direction
