@@ -41,10 +41,8 @@ class ThreadDimensions:
     sin_hangle: float
     dia_major_cutoff: float
     dia_minor_cutoff: float
-    dia_major_thread_half_height: float
-    dia_minor_thread_half_height: float
-    tip_to_dia_major: float
-    tip_to_dia_minor: float
+    tip_to_major_cutoff: float
+    tip_to_minor_cutoff: float
     thread_depth: float
 
     # thread_depth_plus_overlap: float
@@ -109,17 +107,12 @@ class ThreadDimensions:
             if (dia_minor_cutoff_pitch_divisor != 0)
             else 0
         )
-        self.dia_major_thread_half_height: float = self.dia_major_cutoff / 2
-        self.dia_minor_thread_half_height: float = (pitch - self.dia_minor_cutoff) / 2
+        self.tip_to_major_cutoff: float = ((pitch - self.dia_major_cutoff) / 2) / self.tan_hangle
+        self.tip_to_minor_cutoff: float = (self.dia_minor_cutoff / 2) / self.tan_hangle
         print(
-            f"ThreadDimensions: dia_major_thread_half_height={self.dia_major_thread_half_height:.3f} dia_minor_thread_half_height={self.dia_minor_thread_half_height:.3f}"
+            f"ThreadDimensions: tip_to_major_cutoff={self.tip_to_major_cutoff:.3f} tip_to_minor_cutoff={self.tip_to_minor_cutoff:.3f}"
         )
-        self.tip_to_dia_major: float = self.dia_major_thread_half_height / self.tan_hangle
-        self.tip_to_dia_minor: float = self.dia_minor_thread_half_height / self.tan_hangle
-        print(
-            f"ThreadDimensions: tip_to_dia_major={self.tip_to_dia_minor:.3f} tip_to_dia_major={self.tip_to_dia_minor:.3f}"
-        )
-        self.thread_depth: float = self.tip_to_dia_minor - self.tip_to_dia_major
+        self.thread_depth: float = self.tip_to_major_cutoff - self.tip_to_minor_cutoff
         print(f"ThreadDimensions: thread_depth={self.thread_depth}")
 
         # Internal threads have helix thread at the dia_major side
