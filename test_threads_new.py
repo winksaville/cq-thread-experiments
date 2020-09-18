@@ -1,5 +1,4 @@
-# TODO: create separate tests for the above and maybe others
-# TODO: What to do about negative ext_clearance and thread_overlap?
+# TODO: What to do about negative parameters such as ext_clearance and thread_overlap?
 from math import atan, cos, degrees, isclose, pi, radians, sin, tan
 from typing import Tuple, Union, cast
 
@@ -30,7 +29,7 @@ angle_degs = 90
 major_pd = 8
 minor_pd = 4
 thread_overlap = 0 #1e-3
-inset = pitch / 3
+inset = 0 #pitch / 3
 taper_rpos = 0.1
 ext_clearance = 0 #0.05
 
@@ -117,6 +116,7 @@ def test_ext_clearance(external_threads, major_pd, minor_pd, ext_clearance, thre
                 # print(f"y >= 0: y={y}")
         # print(f"bloop: hl={hl} x={x} y={y}")
         extpts.append((x, y + (pitch / 2)))
+        #extpts.append((x, y))
     print(f"extpts={extpts}")
 
     exttrap = cq.Workplane("XZ").polyline(extpts).close()
@@ -154,34 +154,32 @@ def test_ext_clearance(external_threads, major_pd, minor_pd, ext_clearance, thre
     print(f" intL_minor={intL_minor:.10f}")
     # assert isclose(intL_minor, ext_clearance, abs_tol=1e-9)
 
-    #assert isclose(ext0_slope, ext_clearance, abs_tol=1e-9)
-    #assert isclose(extL_slope, ext_clearance, abs_tol=1e-9)
-    #assert isclose(ext2_major, ext_clearance, abs_tol=1e-9)
-    #assert isclose(extL_major, ext_clearance, abs_tol=1e-9)
-    #assert isclose(int2_minor, ext_clearance, abs_tol=1e-9)
-    #assert isclose(intL_minor, ext_clearance, abs_tol=1e-9)
+    assert isclose(ext0_slope, ext_clearance, abs_tol=1e-9)
+    assert isclose(extL_slope, ext_clearance, abs_tol=1e-9)
+    assert isclose(ext2_major, ext_clearance, abs_tol=1e-9)
+    assert isclose(extL_major, ext_clearance, abs_tol=1e-9)
+    assert isclose(int2_minor, ext_clearance, abs_tol=1e-9)
+    assert isclose(intL_minor, ext_clearance, abs_tol=1e-9)
 
 if __name__ == "__main__" or "show_object" in globals():
     # OK:
-    #test_ext_clearance(False, 0, 0, 0, 0) # int_helixes == tri ext_helixes == tri
-    #test_ext_clearance(False, 0, 0, 0, 0.001) # int_helixes == tri ext_helixes == tri
-
-    #test_ext_clearance(False, 8, 4, 0, 0) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(False, 8, 4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(False, 8, 4, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(False, 8, 4, 0, 0.001) # int_helixes == trap ext_helixes == trap
-
-    #test_ext_clearance(False, 8, 0, 0, 0) # int_helixes == tri ext_helixes == trap
-    #test_ext_clearance(False, 8, 0, 0.05, 0.001) # int_helixes == tri ext_helixes == trap
-    #test_ext_clearance(False, 8, 0, 0.05, 0) # int_helixes == tri ext_helixes == trap
-    #test_ext_clearance(False, 8, 0, 0, 0.001) # int_helixes == tri ext_helixes == trap
-
-    #test_ext_clearance(False, 0, 4, 0, 0) # int_helixes == tri ext_helixes == trap
-    #test_ext_clearance(False, 0, 4, 0, 0.001) # int_helixes == tri ext_helixes == trap
-
-    # FAILS: extL_slope fails 0.0207106781 expected 0.05
-    test_ext_clearance(False, 0, 4, 0.05, 0.001) # int_helixes == tri ext_helixes == trap
-    test_ext_clearance(False, 0, 4, 0.05, 0) # int_helixes == tri ext_helixes == trap
+    test_ext_clearance(False, 0, 0, 0, 0) # int_helixes == tri ext_helixes == tri
+    test_ext_clearance(False, 0, 0, 0, 0.001) # int_helixes == tri ext_helixes == tri
     test_ext_clearance(False, 0, 0, 0.05, 0) # int_helixes == tri ext_helixes == tri
     test_ext_clearance(False, 0, 0, 0.05, 0.001) # int_helixes == tri ext_helixes == tri
+
+    test_ext_clearance(False, 8, 4, 0, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(False, 8, 4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(False, 8, 4, 0.05, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(False, 8, 4, 0, 0.001) # int_helixes == trap ext_helixes == trap
+
+    test_ext_clearance(False, 8, 0, 0, 0) # int_helixes == tri ext_helixes == trap
+    test_ext_clearance(False, 8, 0, 0.05, 0.001) # int_helixes == tri ext_helixes == trap
+    test_ext_clearance(False, 8, 0, 0.05, 0) # int_helixes == tri ext_helixes == trap
+    test_ext_clearance(False, 8, 0, 0, 0.001) # int_helixes == tri ext_helixes == trap
+
+    test_ext_clearance(False, 0, 4, 0, 0) # int_helixes == tri ext_helixes == trap
+    test_ext_clearance(False, 0, 4, 0, 0.001) # int_helixes == tri ext_helixes == trap
+    test_ext_clearance(False, 0, 4, 0.05, 0) # int_helixes == tri ext_helixes == trap
+    test_ext_clearance(False, 0, 4, 0.05, 0.001) # int_helixes == tri ext_helixes == trap
 

@@ -1,3 +1,10 @@
+# TODO: I think the handling of thread overlap for triangular
+#       threads is wrong. Actually now that I think aboult it
+#       the handling of overlap may be completely wrong because
+#       we're changing the radius without changing the pitch
+#       thus I think the angle of the threads are wrong. This
+#       is probably why I need to have the conditional is needed
+#       when comptuing ext_thread_half_height_at_opposite_ext_helix_radius.
 from dataclasses import dataclass
 from math import atan, cos, degrees, pi, radians, sin, tan
 from typing import List, Tuple, Union, cast
@@ -176,9 +183,13 @@ class ThreadDimensions:
             - self.ext_vert_adj
             + self.thread_overlap_vert_adj
         )
+
+        # TODO: Figure out why we need to add ext_ver_adj when dia_major_cutoff is 0
+        #       whereas at all othee times we substract it. This might be related
+        #       to miss handling of thread_overlap. See TODO at top of file.
         ext_thread_half_height_at_opposite_ext_helix_radius = (
             self.dia_major_cutoff / 2
-        ) - self.ext_vert_adj
+        ) - (self.ext_vert_adj if self.dia_major_cutoff > 0 else -self.ext_vert_adj)
 
         print(
             f"ext_thh_at_ehr={ext_thread_half_height_at_ext_helix_radius} ext_thh_at_oehr={ext_thread_half_height_at_opposite_ext_helix_radius}"
