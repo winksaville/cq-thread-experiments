@@ -126,7 +126,7 @@ class ThreadDimensions:
         self.helix_radius = self.dia_major / 2
         print(f"self.helix_radius={self.helix_radius}")
 
-        self.thread_overlap_vert_adj = self.thread_overlap / self.tan_hangle
+        self.thread_overlap_vert_adj = self.thread_overlap * self.tan_hangle
         self.thread_half_height_at_helix_radius = (
             (pitch - self.dia_major_cutoff) / 2
         ) + self.thread_overlap_vert_adj
@@ -152,7 +152,7 @@ class ThreadDimensions:
         )
         self.helixes.append(
             HelixLocation(
-                radius=self.helix_radius + self.thread_overlap,
+                radius=self.helix_radius,
                 horz_offset=-self.thread_depth,
                 vert_offset=+self.thread_half_height_at_opposite_helix_radius,
             )
@@ -160,7 +160,7 @@ class ThreadDimensions:
         if self.dia_minor_cutoff > 0:
             self.helixes.append(
                 HelixLocation(
-                    radius=self.helix_radius + self.thread_overlap,
+                    radius=self.helix_radius,
                     horz_offset=-self.thread_depth,
                     vert_offset=-self.thread_half_height_at_opposite_helix_radius,
                 )
@@ -212,7 +212,7 @@ class ThreadDimensions:
         )
         self.ext_helixes.append(
             HelixLocation(
-                radius=self.ext_helix_radius - self.thread_overlap,
+                radius=self.ext_helix_radius,
                 horz_offset=+self.thread_depth,
                 vert_offset=+ext_thread_half_height_at_opposite_ext_helix_radius,
             )
@@ -220,7 +220,7 @@ class ThreadDimensions:
         if self.dia_major_cutoff > 0:
             self.ext_helixes.append(
                 HelixLocation(
-                    radius=self.ext_helix_radius - self.thread_overlap,
+                    radius=self.ext_helix_radius,
                     horz_offset=+self.thread_depth,
                     vert_offset=-ext_thread_half_height_at_opposite_ext_helix_radius,
                 )
