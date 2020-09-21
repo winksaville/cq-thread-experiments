@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import atan, cos, degrees, pi, radians, sin, tan
-from typing import List, Tuple, cast
+from typing import List, Tuple, Union, cast
 
 import cadquery as cq
 from taperable_helix import helix
@@ -27,21 +27,26 @@ def _threads(external_threads: bool, ht: HelicalThreads) -> cq.Solid:
         not external_threads
     ) else ht.ext_helixes
 
-    wires: cq.Wire = [
+    # wires: cq.Wire = [
+    # wires: List[Union[cq.Vector, cq.Location, cq.Shape]] = [
+    wires: List[cq.Wire] = [
         (
-            cq.Workplane("XY")
-            .parametricCurve(
-                helix(
-                    radius=hl.radius,
-                    pitch=ht.pitch,
-                    height=ht.height,
-                    taper_rpos=ht.taper_rpos,
-                    inset_offset=ht.inset,
-                    horz_offset=hl.horz_offset,
-                    vert_offset=hl.vert_offset,
+            cast(
+                cq.Wire,
+                cq.Workplane("XY")
+                .parametricCurve(
+                    helix(
+                        radius=hl.radius,
+                        pitch=ht.pitch,
+                        height=ht.height,
+                        taper_rpos=ht.taper_rpos,
+                        inset_offset=ht.inset,
+                        horz_offset=hl.horz_offset,
+                        vert_offset=hl.vert_offset,
+                    )
                 )
+                .val(),
             )
-            .val()
         )
         for hl in helix_locations
     ]
@@ -51,7 +56,8 @@ def _threads(external_threads: bool, ht: HelicalThreads) -> cq.Solid:
     # print(f"threads: wires.len={len(wires)}")
 
     # Create the faces of the thread
-    faces: cq.Faces = []
+    # faces: cq.Faces = []
+    faces: List[cq.Face] = []
     faces.append(cq.Face.makeRuledSurface(wires[0], wires[1]))
     faces.append(cq.Face.makeRuledSurface(wires[1], wires[2]))
     if lenWires == 4:

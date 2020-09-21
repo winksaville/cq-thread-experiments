@@ -1,5 +1,3 @@
-# TODO: top slope of external thread is not parallel to bottom slope of internal thread
-# TODO: Shouldn't need the "compensation" code except for thread_overlap
 # TODO: What to do about negative parameters such as ext_clearance and thread_overlap?
 from math import atan, cos, degrees, isclose, pi, radians, sin, tan
 from typing import Tuple, cast

@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+import argparse
+import sys
+from math import atan, cos, degrees, pi, radians, sin, tan
+from typing import Tuple, cast
+
+import cadquery as cq
+
+from cq_threads import ext_threads, int_threads
+from helicalthreads import HelicalThreads
+from wing_utils import (
+    diffPts,
+    perpendicular_distance_pt_to_line_2d,
+    setCtx,
+    show,
+    translate_2d,
+)
+
+setCtx(globals())
+
+if __name__ == "__main__" or "cq_editor" in sys.modules:
+    # Clearance between internal threads and external threads.
+    # The external threads are horzitionally moved to create
+    # the clearance.
+    ext_clearance = 0.05
+
+    # Set to guarantee the thread and core overlap and a manifold is created
+    thread_overlap = 0.001
+
+    # Tolerance value for generating STL files
+    stl_tolerance = 1e-3
+
+    # The separation between edges of a helix after on revolution.
+    pitch = 2
+
+    # The included angle of the "tip" of a thread
+    angle_degs = 90
+
+    # Adjust z by inset so threads are inset from the bottom and top
+    inset = pitch / 3
+
+    dia_major = 8
+    height = 10 + (2 * inset)
+    head_size = 12  # Size of the head
+
+    major_cutoff = pitch / 8
+    minor_cutoff = pitch / 4
+    taper_rpos = 0.1
+
+    head_height = 4
+    wall_thickness = 2  # amount substracted from bolt radius to hollow out the bolt
+
+    parser = argparse.ArgumentParser()
+    # Ignored for nuts
+    parser.add_argument(
+        "-c",
+        "--ext_clearance",
+        help="Clearance between internal and external threads",
+        nargs="?",
+        type=float,
+        default=ext_clearance,
+    )
+    parser.add_argument(
+        "-to",
+        "--thread_overlap",
+        help="Thread overlap with core",
+        nargs="?",
+        type=float,
+        default=thread_overlap,
+    )
+    parser.add_argument(
+        "-st",
+        "--stl_tolerance",
+        help="stl file tollerance",
+        nargs="?",
+        type=float,
+        default=stl_tolerance,
+    )
+    parser.add_argument(
+        "-p", "--pitch", help="thread pitch", nargs="?", type=float, default=pitch,
+    )
+    parser.add_argument(
+        "-a",
+        "--angle_degs",
+        help="Angle of thread in degrees",
+        nargs="?",
+        type=float,
+        default=angle_degs,
+    )
+    parser.add_argument(
+        "-in",
+        "--inset",
+        help="Top and bottom inset of threads",
+        nargs="?",
+        type=float,
+        default=inset,
+    )
+    parser.add_argument(
+        "-d", "--diameter", help="Diameter", nargs="?", type=float, default=dia_major,
+    )
+    parser.add_argument(
+        "-he",
+        "--height",
+        help="Height of threads including inset",
+        nargs="?",
+        type=float,
+        default=height,
+    )
+    parser.add_argument(
+        "-hs", "--head_size", help="Size of head", nargs="?", type=float, default=head_size,
+    )
+    parser.add_argument(
+        "-mj",
+        "--major_cutoff",
+        help="Thread cutoff at outside diameter (major_diameter)",
+        nargs="?",
+        type=float,
+        default=major_cutoff,
+    )
+    parser.add_argument(
+        "-mi",
+        "--minor_cutoff",
+        help="Thread cutoff at inside diameter (minor_diameter)",
+        nargs="?",
+        type=float,
+        default=minor_cutoff,
+    )
+    parser.add_argument(
+        "-t",
+        "--taper_rpos",
+        help="Taper relative position, so 0.1 is 10%% at each end will be tapered",
+        nargs="?",
+        type=float,
+        default=taper_rpos,
+    )
+    parser.add_argument(
+        "-hh",
+        "--head_height",
+        help="Head height",
+        nargs="?",
+        type=float,
+        default=head_height,
+    )
+    parser.add_argument(
+        "-wt",
+        "--wall_thickness",
+        help="wall_thickness",
+        nargs="?",
+        type=float,
+        default=wall_thickness,
+    )
+    args = parser.parse_args()
+
+    print(f"arg={vars(args)}")
+
+    height = args.height
+    pitch = args.pitch
+    dia_major = args.diameter
+    angle_degs = args.angle_degs
+    inset = args.inset
+    ext_clearance = args.ext_clearance
+    taper_rpos = args.taper_rpos
+    major_cutoff = args.major_cutoff
+    minor_cutoff = args.minor_cutoff
+    thread_overlap = args.thread_overlap
+
+    thread_overlap = args.thread_overlap
+    stl_tolerance = args.stl_tolerance
+
+    ht = HelicalThreads(
+        height=height,
+        pitch=pitch,
+        dia_major=dia_major,
+        angle_degs=angle_degs,
+        inset=inset,
+        ext_clearance=ext_clearance,
+        taper_rpos=taper_rpos,
+        major_cutoff=major_cutoff,
+        minor_cutoff=minor_cutoff,
+        thread_overlap=thread_overlap,
+    )
+    print(f"ht={vars(ht)}")
+
+    boltThreads = ext_threads(ht)
+    # show(boltThreads, "botThreads-0")
+    # boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
+    # print(f"bolthreadsBb={vars(boltThreadsBb)}")
+
+    boltCoreRadius = ht.ext_helix_radius
+    # print(f"boltCoreRadius={boltCoreRadius} boltRadius={boltRadius:.3f})
+
+    boltHead = (
+        cq.Workplane("XY", origin=(0, 0, 0)).polygon(6, head_size).extrude(head_height)
+    )
+    # show(boltHead, "boltHead-0")
+
+    boltCore = (
+        cq.Workplane("XY", origin=(0, 0, head_height))
+        .circle(boltCoreRadius)
+        .circle(boltCoreRadius - wall_thickness)
+        .extrude(height)
+    )
+    # show(boltCore, "boltCore-0")
+
+    bolt = boltHead.union(boltCore).union(
+        boltThreads.move(cq.Location(cq.Vector(0, 0, head_height)))
+    )
+    show(bolt, "bolt-0")
+
+    fname = f"bolt-dia_{dia_major:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-h_{height:.3f}-hs_{head_size}-mj_{major_cutoff}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stl_tolerance:.3f}.stl"
+    cq.exporters.export(bolt, fname, tolerance=stl_tolerance)
+    print(f"{fname}")
