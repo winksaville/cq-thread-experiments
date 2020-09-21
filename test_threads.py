@@ -28,7 +28,6 @@ setCtx(globals())
 pitch = 2
 radius = 8
 angle_degs = 90
-external_threads = False
 major_cutoff = pitch/8
 minor_cutoff = pitch/4
 thread_overlap = 0 #1e-3
@@ -70,7 +69,6 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
         pitch=pitch,
         dia_major=radius,
         angle_degs=angle_degs,
-        external_threads=external_threads,
         major_cutoff=major_cutoff,
         minor_cutoff=minor_cutoff,
         thread_overlap=thread_overlap,

@@ -59,7 +59,6 @@ thread_dims = ThreadDimensions(
     pitch=pitch,
     dia_major=nutDiameter,
     angle_degs=angle_degs,
-    external_threads=False,
     major_cutoff=major_cutoff,
     minor_cutoff=minor_cutoff,
     thread_overlap=thread_overlap,
@@ -142,10 +141,10 @@ nut = nutCore.union(nutThreads)
 print("nut end   union")
 show(nut, "nut-0")
 
-fname = f"bolt-dia_{boltDiameter:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-td_{thread_dims.thread_depth:.3f}-h_{boltHeight:.3f}-mj_{major_cutoff}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stlTolerance:.3f}.stl"
+fname = f"bolt-dia_{boltDiameter:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-h_{boltHeight:.3f}-mj_{major_cutoff}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stlTolerance:.3f}.stl"
 cq.exporters.export(bolt, fname, tolerance=stlTolerance)
 print(f"{fname}")
 
-fname = f"nut-dia_{nutDiameter:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-td_{thread_dims.thread_depth:.3f}-h_{nutHeight:.3f}-mj_{major_cutoff}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stlTolerance:.3f}.stl"
+fname = f"nut-dia_{nutDiameter:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-h_{nutHeight:.3f}-mj_{major_cutoff}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stlTolerance:.3f}.stl"
 cq.exporters.export(nut, fname, tolerance=stlTolerance)
 print(f"{fname}")
