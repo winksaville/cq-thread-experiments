@@ -84,7 +84,7 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
     intpts = []
     x: float
     y: float
-    for hl in thread_dims.helixes:
+    for hl in thread_dims.int_helixes:
         # print(f"tloop: hl={hl}")
         x = hl.radius + hl.horz_offset
         y = hl.vert_offset
