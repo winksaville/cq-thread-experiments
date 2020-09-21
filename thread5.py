@@ -5,7 +5,7 @@ from typing import Tuple, cast
 import cadquery as cq
 from taperable_helix import helix
 
-from threads import ThreadDimensions, threads
+from threads import ThreadDimensions, int_threads, ext_threads
 from wing_utils import (
     diffPts,
     perpendicular_distance_pt_to_line_2d,
@@ -59,28 +59,16 @@ thread_dims = ThreadDimensions(
     pitch=pitch,
     dia_major=nutDiameter,
     angle_degs=angle_degs,
+    inset=inset,
+    ext_clearance=ext_clearance,
+    taper_rpos=taper_rpos,
     major_cutoff=major_cutoff,
     minor_cutoff=minor_cutoff,
     thread_overlap=thread_overlap,
-    inset=inset,
-    taper_rpos=taper_rpos,
-    ext_clearance=ext_clearance,
 )
 print(f"thread_dims={vars(thread_dims)}")
 
-boltThreads = threads(
-    height=boltHeight,
-    pitch=pitch,
-    dia_major=boltDiameter,
-    angle_degs=angle_degs,
-    external_threads=True,
-    major_cutoff=major_cutoff,
-    minor_cutoff=minor_cutoff,
-    thread_overlap=thread_overlap,
-    inset=inset,
-    taper_rpos=taper_rpos,
-    ext_clearance=ext_clearance,
-)
+boltThreads = ext_threads(thread_dims)
 # show(boltThreads, "botThreads-0")
 # show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
 # boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
@@ -119,19 +107,7 @@ nutCore = (
 )
 # show(nutCore, "nutCore-0")
 
-nutThreads = threads(
-    height=nutHeight,
-    pitch=pitch,
-    dia_major=nutDiameter,
-    angle_degs=angle_degs,
-    external_threads=False,
-    major_cutoff=major_cutoff,
-    minor_cutoff=minor_cutoff,
-    thread_overlap=thread_overlap,
-    inset=inset,
-    taper_rpos=taper_rpos,
-    ext_clearance=ext_clearance,
-)
+nutThreads = int_threads(thread_dims)
 # show(nutThreads, "nutThreads-0")
 # nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
 # print(f"nuthreadsBb={vars(nutThreadsBb)}")

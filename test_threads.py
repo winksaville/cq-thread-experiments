@@ -8,7 +8,7 @@ import cadquery as cq
 import pytest
 from taperable_helix import helix
 
-from threads import HelixLocation, ThreadDimensions, threads
+from threads import HelixLocation, ThreadDimensions
 from wing_utils import (
     X,
     Y,
