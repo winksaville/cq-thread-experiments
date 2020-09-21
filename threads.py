@@ -29,13 +29,12 @@ class ThreadDimensions:
     pitch: float
     dia_major: float
     angle_degs: float
-    external_threads: bool
+    inset: float
+    ext_clearance: float
+    taper_rpos: float
     major_cutoff: float
     minor_cutoff: float
     thread_overlap: float
-    inset: float
-    taper_rpos: float
-    ext_clearance: float
 
     int_helix_radius: float
     int_helixes: List[HelixLocation] = []
@@ -49,12 +48,12 @@ class ThreadDimensions:
         pitch: float,
         dia_major: float,
         angle_degs: float,
+        inset: float,
+        ext_clearance: float,
+        taper_rpos: float,
         major_cutoff: float,
         minor_cutoff: float,
         thread_overlap: float,
-        inset: float,
-        taper_rpos: float,
-        ext_clearance: float,
     ) -> None:
         print(
             f"ThreadDimensions:+ height={height:.3f} dia_major={dia_major:.3f} pitch={pitch:.3f} angle_degs={angle_degs:.3f}"
@@ -200,57 +199,17 @@ class ThreadDimensions:
             )
 
 
-def threads(
-    height: float,
-    pitch: float,
-    dia_major: float,
-    angle_degs: float = 60,
-    external_threads: bool = True,
-    major_cutoff: float = 8,
-    minor_cutoff: float = 4,
-    thread_overlap: float = 0.0001,
-    inset: float = 0,
-    taper_rpos: float = 0.10,
-    ext_clearance: float = 0,
-) -> cq.Solid:
+def _threads(external_threads: bool, td: ThreadDimensions) -> cq.Solid:
     """
     Create a thread helix which may be triangular or trapizodal.
 
     You can control the size and spacing of the threads using
-    the various using the parameters.
+    the various parameters to ThreadDimensions.
 
-    :param height: Height including top and bottom inset
-    :param dia_major: Diameter of threads its largest dimension
-    :param pitch: Peek to Peek measurement of the threads in units default is mm
-    :param angle_degs: Angle of the thread profile in degrees
-    :param major_cutoff: is v in pitch/v to determine size of MajorCutOff
-        0 for no MajorCutOff
-    :param minor_cutoff: is v in pitch/v to determin size of MinorCutOff
-        0 for no MinorCutOff
-    :param thread_overlap: amount to increase alter dimensions so threads and core overlap
-        and a manifold is created
-    :param inset: number units in the z direction
-    :param taper_rpos: percent of threads which are tapered at the ends
     :returns: Solid representing the threads and float dept
     """
 
-    # print(f"threads:+ height={height:.3f} dia_major={dia_major:.3f} pitch={pitch:.3f} angle_degs={angle_degs:.3f} external_threads={external_threads}")
-    # print(f"threads: major_cutoff={major_cutoff} minor_cutoff={minor_cutoff}")
-    # print(f"threads: thread_overlap={thread_overlap:.3f} inset={inset:.3f} taper_rpos={taper_rpos:.3f}")
-
-    td = ThreadDimensions(
-        height,
-        pitch,
-        dia_major,
-        angle_degs,
-        major_cutoff,
-        minor_cutoff,
-        thread_overlap,
-        inset,
-        taper_rpos,
-        ext_clearance=ext_clearance,
-    )
-    # print(f"td={vars(td)}")
+    # print(f"_threads: external_threads={external_threads} td={vars(td)}")
 
     helix_locations: List[HelixLocation] = td.int_helixes if (
         not external_threads
@@ -262,10 +221,10 @@ def threads(
             .parametricCurve(
                 helix(
                     radius=hl.radius,
-                    pitch=pitch,
-                    height=height,
-                    taper_rpos=taper_rpos,
-                    inset_offset=inset,
+                    pitch=td.pitch,
+                    height=td.height,
+                    taper_rpos=td.taper_rpos,
+                    inset_offset=td.inset,
                     horz_offset=hl.horz_offset,
                     vert_offset=hl.vert_offset,
                 )
@@ -296,3 +255,30 @@ def threads(
     # show(rv, "rv")
 
     return rv
+
+
+def int_threads(td: ThreadDimensions) -> cq.Solid:
+    """
+    Create internal threads which may be triangular or trapizodal.
+
+    You can control the size and spacing of the threads using
+    the various parameters to ThreadDimensions.
+
+    :param td: ThreadDimensions
+    :returns: Solid representing the threads and float dept
+    """
+    return _threads(False, td)
+
+
+def ext_threads(td: ThreadDimensions) -> cq.Solid:
+    """
+    Create external threads which may be triangular or trapizodal.
+
+    You can control the size and spacing of the threads using
+    the various parameters to ThreadDimensions.
+
+    :param td: ThreadDimensions
+    :returns: Solid representing the threads and float dept
+    """
+    return _threads(True, td)
+
