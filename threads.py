@@ -48,8 +48,8 @@ class ThreadDimensions:
     thread_half_height_at_helix_radius: float
     thread_half_height_at_opposite_helix_radius: float
 
-    helix_radius: float
-    helixes: List[HelixLocation] = []
+    int_helix_radius: float
+    int_helixes: List[HelixLocation] = []
 
     ext_clearance: float
     ext_vert_adj: float
@@ -106,8 +106,8 @@ class ThreadDimensions:
         print(f"ThreadDimensions: thread_depth={self.thread_depth}")
 
         # Internal threads have helix thread at the dia_major side
-        self.helix_radius = self.dia_major / 2
-        print(f"self.helix_radius={self.helix_radius}")
+        self.int_helix_radius = self.dia_major / 2
+        print(f"self.int_helix_radius={self.int_helix_radius}")
 
         self.thread_overlap_vert_adj = self.thread_overlap * self.tan_hangle
         self.thread_half_height_at_helix_radius = (
@@ -118,32 +118,32 @@ class ThreadDimensions:
             f"thh_at_r={self.thread_half_height_at_helix_radius} thh_at_or={self.thread_half_height_at_opposite_helix_radius} td={self.thread_depth}"
         )
 
-        self.helixes = []
-        self.helixes.append(
+        self.int_helixes = []
+        self.int_helixes.append(
             HelixLocation(
-                radius=self.helix_radius + self.thread_overlap,
+                radius=self.int_helix_radius + self.thread_overlap,
                 horz_offset=0,
                 vert_offset=-self.thread_half_height_at_helix_radius,
             )
         )
-        self.helixes.append(
+        self.int_helixes.append(
             HelixLocation(
-                radius=self.helix_radius + self.thread_overlap,
+                radius=self.int_helix_radius + self.thread_overlap,
                 horz_offset=0,
                 vert_offset=+self.thread_half_height_at_helix_radius,
             )
         )
-        self.helixes.append(
+        self.int_helixes.append(
             HelixLocation(
-                radius=self.helix_radius,
+                radius=self.int_helix_radius,
                 horz_offset=-self.thread_depth,
                 vert_offset=+self.thread_half_height_at_opposite_helix_radius,
             )
         )
         if self.minor_cutoff > 0:
-            self.helixes.append(
+            self.int_helixes.append(
                 HelixLocation(
-                    radius=self.helix_radius,
+                    radius=self.int_helix_radius,
                     horz_offset=-self.thread_depth,
                     vert_offset=-self.thread_half_height_at_opposite_helix_radius,
                 )
@@ -270,7 +270,7 @@ def threads(
     )
     # print(f"td={vars(td)}")
 
-    helix_locations: List[HelixLocation] = td.helixes if (
+    helix_locations: List[HelixLocation] = td.int_helixes if (
         not external_threads
     ) else td.ext_helixes
 
