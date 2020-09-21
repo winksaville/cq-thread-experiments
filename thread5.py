@@ -1,6 +1,6 @@
 # from: https://groups.google.com/g/cadquery/c/5kVRpECcxAU/m/7no7_ja6AAAJ
 from math import atan, cos, degrees, pi, radians, sin, tan
-from typing import Tuple, Union, cast
+from typing import Tuple, cast
 
 import cadquery as cq
 from taperable_helix import helix
@@ -50,8 +50,8 @@ boltHeadHeight = 4
 boltWallThickness = 2  # amount substracted from bolt radius to hollow out the bolt
 boltSpan = nutSpan
 
-majorPd = 8
-minorPd = 4
+major_cutoff = pitch/8
+minor_cutoff = pitch/4
 taper_rpos = 0.1
 
 thread_dims = ThreadDimensions(
@@ -60,8 +60,8 @@ thread_dims = ThreadDimensions(
     dia_major=nutDiameter,
     angle_degs=angle_degs,
     external_threads=False,
-    dia_major_cutoff_pitch_divisor=majorPd,
-    dia_minor_cutoff_pitch_divisor=minorPd,
+    major_cutoff=major_cutoff,
+    minor_cutoff=minor_cutoff,
     thread_overlap=thread_overlap,
     inset=inset,
     taper_rpos=taper_rpos,
@@ -75,8 +75,8 @@ boltThreads = threads(
     dia_major=boltDiameter,
     angle_degs=angle_degs,
     external_threads=True,
-    dia_major_cutoff_pitch_divisor=majorPd,
-    dia_minor_cutoff_pitch_divisor=minorPd,
+    major_cutoff=major_cutoff,
+    minor_cutoff=minor_cutoff,
     thread_overlap=thread_overlap,
     inset=inset,
     taper_rpos=taper_rpos,
@@ -126,8 +126,8 @@ nutThreads = threads(
     dia_major=nutDiameter,
     angle_degs=angle_degs,
     external_threads=False,
-    dia_major_cutoff_pitch_divisor=majorPd,
-    dia_minor_cutoff_pitch_divisor=minorPd,
+    major_cutoff=major_cutoff,
+    minor_cutoff=minor_cutoff,
     thread_overlap=thread_overlap,
     inset=inset,
     taper_rpos=taper_rpos,
@@ -142,10 +142,10 @@ nut = nutCore.union(nutThreads)
 print("nut end   union")
 show(nut, "nut-0")
 
-fname = f"bolt-dia_{boltDiameter:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-td_{thread_dims.thread_depth:.3f}-h_{boltHeight:.3f}-mjPd_{majorPd}-miPd_{minorPd:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stlTolerance:.3f}.stl"
+fname = f"bolt-dia_{boltDiameter:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-td_{thread_dims.thread_depth:.3f}-h_{boltHeight:.3f}-mj_{major_cutoff}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stlTolerance:.3f}.stl"
 cq.exporters.export(bolt, fname, tolerance=stlTolerance)
 print(f"{fname}")
 
-fname = f"nut-dia_{nutDiameter:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-td_{thread_dims.thread_depth:.3f}-h_{nutHeight:.3f}-mjPd_{majorPd}-miPd_{minorPd:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stlTolerance:.3f}.stl"
+fname = f"nut-dia_{nutDiameter:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-td_{thread_dims.thread_depth:.3f}-h_{nutHeight:.3f}-mj_{major_cutoff}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stlTolerance:.3f}.stl"
 cq.exporters.export(nut, fname, tolerance=stlTolerance)
 print(f"{fname}")
