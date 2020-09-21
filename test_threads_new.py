@@ -38,17 +38,29 @@ ext_clearance = 0 #0.05
 
 height = 4 + (2 * inset)
 
+def isclose_or_gt(v1, v2, abs_tol=1e-9) -> bool:
+    """v1 is close to or greater than v2"""
+    return isclose(v1, v2, abs_tol=abs_tol) or (v1 > v2)
+
 @pytest.mark.parametrize(
     "major_pd,minor_pd,ext_clearance,thread_overlap",
     [
-        # (8, 4, 0, 0),
-        # (0, 4, 0, 0),
-        # (4, 0, 0, 0),
-        # (0, 0, 0, 0),
-        # (8, 4, 0.05, 0),
-        # (0, 4, 0.05, 0),
-        # (4, 0, 0.05, 0),
-        # (0, 0, 0.05, 0),
+        (0, 0, 0, 0),
+        (0, 0, 0, 0.001),
+        (0, 0, 0.05, 0),
+        (0, 0, 0.05, 0.001),
+        (0, 4, 0, 0),
+        (0, 4, 0, 0.001),
+        (0, 4, 0.05, 0),
+        (0, 4, 0.05, 0.001),
+        (8, 0, 0, 0),
+        (8, 0, 0, 0.001),
+        (8, 0, 0.05, 0),
+        (8, 0, 0.05, 0.001),
+        (8, 4, 0, 0),
+        (8, 4, 0, 0.001),
+        (8, 4, 0.05, 0),
+        (8, 4, 0.05, 0.001),
     ]
 )
 def test_ext_clearance(major_pd, minor_pd, ext_clearance, thread_overlap) -> None:
@@ -74,72 +86,35 @@ def test_ext_clearance(major_pd, minor_pd, ext_clearance, thread_overlap) -> Non
     y: float
     for hl in thread_dims.helixes:
         # print(f"tloop: hl={hl}")
-        if False:
-            # TODO: This should work, compensation should be handled else where
-            x = hl.radius + hl.horz_offset
-            y = hl.vert_offset
-        else:
-            # Adjust vert_offset by thread_overlap_vert_adj to pretend
-            # we've overlaped the threads with the bolt core when
-            # hl.radius is the "base" radius (i.e. thread_dims.helix_helix_raduis)
-            x = hl.radius + hl.horz_offset - thread_dims.thread_overlap
-            y = hl.vert_offset
-            # print(f"current   Y: y={y}")
-            if thread_dims.thread_overlap > 0 and hl.horz_offset == 0:
-                # print("hl.horz_offset == 0")
-                if y > 0:
-                    y -= thread_dims.thread_overlap_vert_adj
-                    # print(f"y > 0: y={y}")
-                else:
-                    y += thread_dims.thread_overlap_vert_adj
-                    # print(f"y <= 0: y={y}")
-            # print(f"corrected Y: y={y}")
+        x = hl.radius + hl.horz_offset
+        y = hl.vert_offset
         intpts.append((x, y))
 
     # Compute the points of the external thread helixes
     extpts = []
     for hl in thread_dims.ext_helixes:
         # print(f"tloop: hl={hl} x={x} y={y}")
-        if False:
-            # TODO: This should work, compensation should be handled else where
-            x = hl.radius + hl.horz_offset
-            y = hl.vert_offset
-        else:
-            # Adjust vert_offset by thread_overlap_vert_adj to pretend
-            # we've overlaped the threads with the bolt core when
-            # hl.radius is the "base" radius (i.e. thread_dims.ext_helix_helix_raduis)
-            x = hl.radius + hl.horz_offset + thread_dims.thread_overlap
-            y = hl.vert_offset
-            # print(f"current   Y: y={y}")
-            if thread_dims.thread_overlap > 0 and hl.horz_offset == 0:
-                # print("hl.horz_offset == 0")
-                if y < 0:
-                    y += thread_dims.thread_overlap_vert_adj
-                    # print(f"y < 0: y={y}")
-                else:
-                    y -= thread_dims.thread_overlap_vert_adj
-                    # print(f"y >= 0: y={y}")
-            # print(f"corrected Y: y={y}")
-        extpts.append((x, y + (pitch / 2)))
-        #extpts.append((x, y))
+        x = hl.radius + hl.horz_offset
+        y = hl.vert_offset
+        extpts.append((x, y + (pitch / 2))) # add pitch/2 to position
+                                            # next to internal helixes
     print(f"extpts={extpts}")
 
-    # exttrap = cq.Workplane("XZ").polyline(extpts).close()
-    # show(exttrap, "exttrap")
-
     # Generate a third set of points which is the next internal set
-    # So we can look at cleareances on both sides of ever pair
+    # So we can look at cleareances on both sides of every pair
     nxipts = [(x, y + pitch) for x, y in intpts]
 
     first_idx: int = 0
-    last_idx: int = 4
+    last_idx: int = 1
     for i in range(first_idx, last_idx+1):
-        show(cq.Workplane("XZ").polyline(intpts).close(), f"int{i}")
-        show(cq.Workplane("XZ").polyline(extpts).close(), f"ext{i}")
 
         print(f"intpts={intpts}")
         print(f"extpts={extpts}")
         print(f"nxipts={nxipts}")
+        print(f"{i}  thread_dims.thread_overlap={thread_dims.thread_overlap}")
+
+        show(cq.Workplane("XZ").polyline(intpts).close(), f"int{i}")
+        show(cq.Workplane("XZ").polyline(extpts).close(), f"ext{i}")
 
         # extN is the N'th entry in the external point array
         # intN is the N'th entry in the internal point array
@@ -153,70 +128,62 @@ def test_ext_clearance(major_pd, minor_pd, ext_clearance, thread_overlap) -> Non
         print(f"{i} ext_clearance={ext_clearance:.10f}")
         ext0_slope = perpendicular_distance_pt_to_line_2d(extpts[0], intpts[1], intpts[2])
         print(f"{i}  ext0_slope={ext0_slope:.10f} {extpts[0]} {intpts[1]} {intpts[2]}")
-        # assert isclose(ext0_slope, ext_clearance, abs_tol=1e-9)
+        assert isclose(ext0_slope, ext_clearance, abs_tol=1e-9)
+
+        # Display a circle at each ext thread vertix so we see it
+        for j, (x, y) in enumerate(extpts):
+            show(cq.Workplane("XZ", origin=(x, 0, y)).circle(0.01), f"e{j}{i}")
 
         extL_slope = perpendicular_distance_pt_to_line_2d(extpts[-1], intpts[1], intpts[2])
         print(f"{i}  extL_slope={extL_slope:.10f} {extpts[-1]} {intpts[1]} {intpts[2]}")
-        # assert isclose(extL_slope, ext_clearance, abs_tol=1e-9)
+        assert isclose(extL_slope, ext_clearance, abs_tol=1e-9)
 
         ext2_major = perpendicular_distance_pt_to_line_2d(extpts[2], intpts[0], intpts[1])
         print(f"{i}  ext2_major={ext2_major:.10f} {extpts[2]} {intpts[0]} {intpts[1]}")
-        # assert isclose(ext2_major, ext_clearance, abs_tol=1e-9)
+        assert isclose_or_gt(ext2_major, ext_clearance + thread_dims.thread_overlap, abs_tol=1e-9)
 
         extL_major = perpendicular_distance_pt_to_line_2d(extpts[-1], intpts[0], intpts[1])
         print(f"{i}  extL_major={extL_major:.10f} {extpts[-1]} {intpts[0]} {intpts[1]}")
-        # assert isclose(extL_major, ext_clearance, abs_tol=1e-9)
+        assert isclose_or_gt(ext2_major, ext_clearance + thread_dims.thread_overlap, abs_tol=1e-9)
 
         int2_minor = perpendicular_distance_pt_to_line_2d(intpts[2], extpts[0], extpts[1])
         print(f"{i}  int2_minor={int2_minor:.10f} {intpts[2]} {extpts[0]} {extpts[1]}")
-        # assert isclose(int2_minor, ext_clearance, abs_tol=1e-9)
+        assert isclose(int2_minor, ext_clearance+ thread_dims.thread_overlap, abs_tol=1e-9)
 
         intL_minor = perpendicular_distance_pt_to_line_2d(intpts[-1], extpts[0], extpts[1])
         print(f"{i}  intL_minor={intL_minor:.10f} {intpts[-1]} {extpts[0]} {extpts[1]}")
-        # assert isclose(intL_minor, ext_clearance, abs_tol=1e-9)
+        assert isclose(intL_minor, ext_clearance+ thread_dims.thread_overlap, abs_tol=1e-9)
 
         ext1_slope = perpendicular_distance_pt_to_line_2d(extpts[1], nxipts[0], nxipts[-1])
         print(f"{i}  ext1_slope={ext1_slope:.10f} {extpts[1]} {nxipts[0]} {nxipts[-1]}")
-        # assert isclose(ext1_slope, ext_clearance, abs_tol=1e-9)
+        assert isclose(ext1_slope, ext_clearance, abs_tol=1e-9)
 
         ext2_slope = perpendicular_distance_pt_to_line_2d(extpts[2], nxipts[0], nxipts[-1])
         print(f"{i}  ext2_slope={ext2_slope:.10f} {extpts[2]} {nxipts[0]} {nxipts[-1]}")
-        # assert isclose(ext2_slope, ext_clearance, abs_tol=1e-9)
+        assert isclose(ext2_slope, ext_clearance, abs_tol=1e-9)
 
-        # Copy the current nxipts and then compute new extpts and nxipts
-        intpts = nxipts.copy()
+        # The current nxipts become intpts then compute new extpts and nxipts
+        intpts = nxipts
         extpts = [(x, y + pitch) for x, y in extpts]
         nxipts = [(x, y + pitch) for x, y in nxipts]
 
-        # The asserts together so they can manually be easily enabled/disabled
-        assert isclose(ext0_slope, ext_clearance, abs_tol=1e-9)
-        assert isclose(extL_slope, ext_clearance, abs_tol=1e-9)
-        assert isclose(ext2_major, ext_clearance, abs_tol=1e-9)
-        assert isclose(extL_major, ext_clearance, abs_tol=1e-9)
-        assert isclose(int2_minor, ext_clearance, abs_tol=1e-9)
-        assert isclose(intL_minor, ext_clearance, abs_tol=1e-9)
-        assert isclose(ext1_slope, ext_clearance, abs_tol=1e-9)
-        assert isclose(ext2_slope, ext_clearance, abs_tol=1e-9)
-
 if __name__ == "__main__" or "show_object" in globals():
-    # OK:
     test_ext_clearance(0, 0, 0, 0) # int_helixes == tri ext_helixes == tri
-    #test_ext_clearance(0, 0, 0, 0.001) # int_helixes == tri ext_helixes == tri
-    #test_ext_clearance(0, 0, 0.05, 0) # int_helixes == tri ext_helixes == tri
-    #test_ext_clearance(0, 0, 0.05, 0.001) # int_helixes == tri ext_helixes == tri
+    test_ext_clearance(0, 0, 0, 0.001) # int_helixes == tri ext_helixes == tri
+    test_ext_clearance(0, 0, 0.05, 0) # int_helixes == tri ext_helixes == tri
+    test_ext_clearance(0, 0, 0.05, 0.001) # int_helixes == tri ext_helixes == tri
 
     test_ext_clearance(0, 4, 0, 0) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(0, 4, 0, 0.001) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(0, 4, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(0, 4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(0, 4, 0, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(0, 4, 0.05, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(0, 4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
 
     test_ext_clearance(8, 0, 0, 0) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(8, 0, 0, 0.001) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(8, 0, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(8, 0, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(8, 0, 0, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(8, 0, 0.05, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(8, 0, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
 
     test_ext_clearance(8, 4, 0, 0) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(8, 4, 0, 0.001) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(8, 4, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    #test_ext_clearance(8, 4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
-
+    test_ext_clearance(8, 4, 0, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(8, 4, 0.05, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(8, 4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap

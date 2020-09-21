@@ -1,10 +1,3 @@
-# TODO: I think the handling of thread overlap for triangular
-#       threads is wrong. Actually now that I think aboult it
-#       the handling of overlap may be completely wrong because
-#       we're changing the radius without changing the pitch
-#       thus I think the angle of the threads are wrong. This
-#       is probably why I need to have the conditional is needed
-#       when comptuing ext_thread_half_height_at_opposite_ext_helix_radius.
 from dataclasses import dataclass
 from math import atan, cos, degrees, pi, radians, sin, tan
 from typing import List, Tuple, Union, cast
@@ -114,6 +107,9 @@ class ThreadDimensions:
             if (dia_minor_cutoff_pitch_divisor != 0)
             else 0
         )
+        print(
+            f"ThreadDimensions: dia_major_cutoff={self.dia_major_cutoff:.3f} dia_minor_cutoff={self.dia_minor_cutoff:.3f}"
+        )
         self.tip_to_major_cutoff: float = ((pitch - self.dia_major_cutoff) / 2) / self.tan_hangle
         self.tip_to_minor_cutoff: float = (self.dia_minor_cutoff / 2) / self.tan_hangle
         print(
@@ -178,21 +174,28 @@ class ThreadDimensions:
             f"self.ext_helix_radius={self.ext_helix_radius} td={self.thread_depth} ec={self.ext_clearance}"
         )
 
-        ext_thread_half_height_at_ext_helix_radius = (
+        ext_thread_half_height_at_ext_helix_radius: float = (
             ((pitch - self.dia_minor_cutoff) / 2)
             - self.ext_vert_adj
-            + self.thread_overlap_vert_adj
+        )
+        ext_thread_half_height_at_ext_helix_radius_plus_tova: float = (
+            ext_thread_half_height_at_ext_helix_radius + self.thread_overlap_vert_adj
         )
 
-        # TODO: Figure out why we need to add ext_ver_adj when dia_major_cutoff is 0
-        #       whereas at all othee times we substract it. This might be related
-        #       to miss handling of thread_overlap. See TODO at top of file.
-        ext_thread_half_height_at_opposite_ext_helix_radius = (
-            self.dia_major_cutoff / 2
-        ) - (self.ext_vert_adj if self.dia_major_cutoff > 0 else -self.ext_vert_adj)
+        # When major cutoff becomes smaller than the exter_vert_adj then the
+        # external thread will only be three points and we set
+        # ext_thrad_half_height_at_opposite_ext_helix_radius # to 0 and
+        # compute the thread depth. Under these circumstances the clearance
+        # from the external tip to internal core will be close to ext_clearance
+        # or greater. See test_threads.py or test_threads_new.py.
+        ext_thread_half_height_at_opposite_ext_helix_radius: float = (self.dia_major_cutoff / 2) - self.ext_vert_adj
+        ext_thread_depth: float = self.thread_depth
+        if ext_thread_half_height_at_opposite_ext_helix_radius < 0:
+            ext_thread_half_height_at_opposite_ext_helix_radius = 0
+            ext_thread_depth = ext_thread_half_height_at_ext_helix_radius / self.tan_hangle
 
         print(
-            f"ext_thh_at_ehr={ext_thread_half_height_at_ext_helix_radius} ext_thh_at_oehr={ext_thread_half_height_at_opposite_ext_helix_radius}"
+            f"ext_thread_depth={ext_thread_depth} ext_thh_at_ehr={ext_thread_half_height_at_ext_helix_radius} ext_thh_at_ehr_plus_tovo={ext_thread_half_height_at_ext_helix_radius_plus_tova} ext_thh_at_oehr={ext_thread_half_height_at_opposite_ext_helix_radius}"
         )
 
         self.ext_helixes = []
@@ -200,28 +203,28 @@ class ThreadDimensions:
             HelixLocation(
                 radius=self.ext_helix_radius - self.thread_overlap,
                 horz_offset=0,
-                vert_offset=-ext_thread_half_height_at_ext_helix_radius,
+                vert_offset=-ext_thread_half_height_at_ext_helix_radius_plus_tova,
             )
         )
         self.ext_helixes.append(
             HelixLocation(
                 radius=self.ext_helix_radius - self.thread_overlap,
                 horz_offset=0,
-                vert_offset=+ext_thread_half_height_at_ext_helix_radius,
+                vert_offset=+ext_thread_half_height_at_ext_helix_radius_plus_tova,
             )
         )
         self.ext_helixes.append(
             HelixLocation(
                 radius=self.ext_helix_radius,
-                horz_offset=+self.thread_depth,
+                horz_offset=ext_thread_depth,
                 vert_offset=+ext_thread_half_height_at_opposite_ext_helix_radius,
             )
         )
-        if self.dia_major_cutoff > 0:
+        if ext_thread_half_height_at_opposite_ext_helix_radius > 0: #self.dia_major_cutoff > 0:
             self.ext_helixes.append(
                 HelixLocation(
                     radius=self.ext_helix_radius,
-                    horz_offset=+self.thread_depth,
+                    horz_offset=ext_thread_depth,
                     vert_offset=-ext_thread_half_height_at_opposite_ext_helix_radius,
                 )
             )
