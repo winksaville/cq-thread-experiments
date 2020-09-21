@@ -5,7 +5,7 @@ from typing import Tuple, cast
 import cadquery as cq
 
 from helicalthreads import HelicalThreads
-from threads import int_threads, ext_threads
+from threads import ext_threads, int_threads
 from wing_utils import (
     diffPts,
     perpendicular_distance_pt_to_line_2d,
@@ -50,8 +50,8 @@ boltHeadHeight = 4
 boltWallThickness = 2  # amount substracted from bolt radius to hollow out the bolt
 boltSpan = nutSpan
 
-major_cutoff = pitch/8
-minor_cutoff = pitch/4
+major_cutoff = pitch / 8
+minor_cutoff = pitch / 4
 taper_rpos = 0.1
 
 ht = HelicalThreads(

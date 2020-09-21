@@ -3,9 +3,9 @@ from math import atan, cos, degrees, pi, radians, sin, tan
 from typing import List, Tuple, cast
 
 import cadquery as cq
-from helicalthreads import HelicalThreads, HelixLocation
 from taperable_helix import helix
 
+from helicalthreads import HelicalThreads, HelixLocation
 from wing_utils import perpendicular_distance_pt_to_line_2d, setCtx, show
 
 setCtx(globals())
@@ -93,4 +93,3 @@ def ext_threads(ht: HelicalThreads) -> cq.Solid:
     :returns: Solid representing the threads and float dept
     """
     return _threads(True, ht)
-

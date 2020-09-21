@@ -28,18 +28,20 @@ setCtx(globals())
 pitch = 2
 radius = 8
 angle_degs = 90
-major_cutoff = pitch/8
-minor_cutoff = pitch/4
-thread_overlap = 0 #1e-3
-inset = 0 #pitch / 3
+major_cutoff = pitch / 8
+minor_cutoff = pitch / 4
+thread_overlap = 0  # 1e-3
+inset = 0  # pitch / 3
 taper_rpos = 0.1
-ext_clearance = 0 #0.05
+ext_clearance = 0  # 0.05
 
 height = 4 + (2 * inset)
+
 
 def isclose_or_gt(v1, v2, abs_tol=1e-9) -> bool:
     """v1 is close to or greater than v2"""
     return isclose(v1, v2, abs_tol=abs_tol) or (v1 > v2)
+
 
 @pytest.mark.parametrize(
     "major_cutoff,minor_cutoff,ext_clearance,thread_overlap",
@@ -48,21 +50,23 @@ def isclose_or_gt(v1, v2, abs_tol=1e-9) -> bool:
         (0, 0, 0, 0.001),
         (0, 0, 0.05, 0),
         (0, 0, 0.05, 0.001),
-        (0, pitch/4, 0, 0),
-        (0, pitch/4, 0, 0.001),
-        (0, pitch/4, 0.05, 0),
-        (0, pitch/4, 0.05, 0.001),
-        (pitch/8, 0, 0, 0),
-        (pitch/8, 0, 0, 0.001),
-        (pitch/8, 0, 0.05, 0),
-        (pitch/8, 0, 0.05, 0.001),
-        (pitch/8, pitch/4, 0, 0),
-        (pitch/8, pitch/4, 0, 0.001),
-        (pitch/8, pitch/4, 0.05, 0),
-        (pitch/8, pitch/4, 0.05, 0.001),
-    ]
+        (0, pitch / 4, 0, 0),
+        (0, pitch / 4, 0, 0.001),
+        (0, pitch / 4, 0.05, 0),
+        (0, pitch / 4, 0.05, 0.001),
+        (pitch / 8, 0, 0, 0),
+        (pitch / 8, 0, 0, 0.001),
+        (pitch / 8, 0, 0.05, 0),
+        (pitch / 8, 0, 0.05, 0.001),
+        (pitch / 8, pitch / 4, 0, 0),
+        (pitch / 8, pitch / 4, 0, 0.001),
+        (pitch / 8, pitch / 4, 0.05, 0),
+        (pitch / 8, pitch / 4, 0.05, 0.001),
+    ],
 )
-def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap) -> None:
+def test_ext_clearance(
+    major_cutoff, minor_cutoff, ext_clearance, thread_overlap
+) -> None:
 
     ht = HelicalThreads(
         height=height,
@@ -94,8 +98,8 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
         # print(f"tloop: hl={hl} x={x} y={y}")
         x = hl.radius + hl.horz_offset
         y = hl.vert_offset
-        extpts.append((x, y + (pitch / 2))) # add pitch/2 to position
-                                            # next to internal helixes
+        # Add pitch / 2 to Y so this is next to internal helix
+        extpts.append((x, y + (pitch / 2)))
     print(f"extpts={extpts}")
 
     # Generate a third set of points which is the next internal set
@@ -104,7 +108,7 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
 
     first_idx: int = 0
     last_idx: int = 1
-    for i in range(first_idx, last_idx+1):
+    for i in range(first_idx, last_idx + 1):
 
         print(f"intpts={intpts}")
         print(f"extpts={extpts}")
@@ -124,7 +128,9 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
         # _major is the distance from the major_cutoff to the nearest points
         # _minor is the distance from the minor_cutoff to the nearest points
         print(f"{i} ext_clearance={ext_clearance:.10f}")
-        ext0_slope = perpendicular_distance_pt_to_line_2d(extpts[0], intpts[1], intpts[2])
+        ext0_slope = perpendicular_distance_pt_to_line_2d(
+            extpts[0], intpts[1], intpts[2]
+        )
         print(f"{i}  ext0_slope={ext0_slope:.10f} {extpts[0]} {intpts[1]} {intpts[2]}")
         assert isclose(ext0_slope, ext_clearance, abs_tol=1e-9)
 
@@ -132,31 +138,49 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
         for j, (x, y) in enumerate(extpts):
             show(cq.Workplane("XZ", origin=(x, 0, y)).circle(0.01), f"e{j}{i}")
 
-        extL_slope = perpendicular_distance_pt_to_line_2d(extpts[-1], intpts[1], intpts[2])
+        extL_slope = perpendicular_distance_pt_to_line_2d(
+            extpts[-1], intpts[1], intpts[2]
+        )
         print(f"{i}  extL_slope={extL_slope:.10f} {extpts[-1]} {intpts[1]} {intpts[2]}")
         assert isclose(extL_slope, ext_clearance, abs_tol=1e-9)
 
-        ext2_major = perpendicular_distance_pt_to_line_2d(extpts[2], intpts[0], intpts[1])
+        ext2_major = perpendicular_distance_pt_to_line_2d(
+            extpts[2], intpts[0], intpts[1]
+        )
         print(f"{i}  ext2_major={ext2_major:.10f} {extpts[2]} {intpts[0]} {intpts[1]}")
-        assert isclose_or_gt(ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
+        assert isclose_or_gt(
+            ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9
+        )
 
-        extL_major = perpendicular_distance_pt_to_line_2d(extpts[-1], intpts[0], intpts[1])
+        extL_major = perpendicular_distance_pt_to_line_2d(
+            extpts[-1], intpts[0], intpts[1]
+        )
         print(f"{i}  extL_major={extL_major:.10f} {extpts[-1]} {intpts[0]} {intpts[1]}")
-        assert isclose_or_gt(ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
+        assert isclose_or_gt(
+            ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9
+        )
 
-        int2_minor = perpendicular_distance_pt_to_line_2d(intpts[2], extpts[0], extpts[1])
+        int2_minor = perpendicular_distance_pt_to_line_2d(
+            intpts[2], extpts[0], extpts[1]
+        )
         print(f"{i}  int2_minor={int2_minor:.10f} {intpts[2]} {extpts[0]} {extpts[1]}")
-        assert isclose(int2_minor, ext_clearance+ ht.thread_overlap, abs_tol=1e-9)
+        assert isclose(int2_minor, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
 
-        intL_minor = perpendicular_distance_pt_to_line_2d(intpts[-1], extpts[0], extpts[1])
+        intL_minor = perpendicular_distance_pt_to_line_2d(
+            intpts[-1], extpts[0], extpts[1]
+        )
         print(f"{i}  intL_minor={intL_minor:.10f} {intpts[-1]} {extpts[0]} {extpts[1]}")
-        assert isclose(intL_minor, ext_clearance+ ht.thread_overlap, abs_tol=1e-9)
+        assert isclose(intL_minor, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
 
-        ext1_slope = perpendicular_distance_pt_to_line_2d(extpts[1], nxipts[0], nxipts[-1])
+        ext1_slope = perpendicular_distance_pt_to_line_2d(
+            extpts[1], nxipts[0], nxipts[-1]
+        )
         print(f"{i}  ext1_slope={ext1_slope:.10f} {extpts[1]} {nxipts[0]} {nxipts[-1]}")
         assert isclose(ext1_slope, ext_clearance, abs_tol=1e-9)
 
-        ext2_slope = perpendicular_distance_pt_to_line_2d(extpts[2], nxipts[0], nxipts[-1])
+        ext2_slope = perpendicular_distance_pt_to_line_2d(
+            extpts[2], nxipts[0], nxipts[-1]
+        )
         print(f"{i}  ext2_slope={ext2_slope:.10f} {extpts[2]} {nxipts[0]} {nxipts[-1]}")
         assert isclose(ext2_slope, ext_clearance, abs_tol=1e-9)
 
@@ -165,23 +189,24 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
         extpts = [(x, y + pitch) for x, y in extpts]
         nxipts = [(x, y + pitch) for x, y in nxipts]
 
+
 if __name__ == "__main__" or "show_object" in globals():
-    test_ext_clearance(0, 0, 0, 0) # int_helixes == tri ext_helixes == tri
-    test_ext_clearance(0, 0, 0, 0.001) # int_helixes == tri ext_helixes == tri
-    test_ext_clearance(0, 0, 0.05, 0) # int_helixes == tri ext_helixes == tri
-    test_ext_clearance(0, 0, 0.05, 0.001) # int_helixes == tri ext_helixes == tri
+    test_ext_clearance(0, 0, 0, 0)
+    test_ext_clearance(0, 0, 0, 0.001)
+    test_ext_clearance(0, 0, 0.05, 0)
+    test_ext_clearance(0, 0, 0.05, 0.001)
 
-    test_ext_clearance(0, pitch/4, 0, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(0, pitch/4, 0, 0.001) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(0, pitch/4, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(0, pitch/4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(0, pitch / 4, 0, 0)
+    test_ext_clearance(0, pitch / 4, 0, 0.001)
+    test_ext_clearance(0, pitch / 4, 0.05, 0)
+    test_ext_clearance(0, pitch / 4, 0.05, 0.001)
 
-    test_ext_clearance(pitch/8, 0, 0, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(pitch/8, 0, 0, 0.001) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(pitch/8, 0, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(pitch/8, 0, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch / 8, 0, 0, 0)
+    test_ext_clearance(pitch / 8, 0, 0, 0.001)
+    test_ext_clearance(pitch / 8, 0, 0.05, 0)
+    test_ext_clearance(pitch / 8, 0, 0.05, 0.001)
 
-    test_ext_clearance(pitch/8, pitch/4, 0, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(pitch/8, pitch/4, 0, 0.001) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(pitch/8, pitch/4, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(pitch/8, pitch/4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch / 8, pitch / 4, 0, 0)
+    test_ext_clearance(pitch / 8, pitch / 4, 0, 0.001)
+    test_ext_clearance(pitch / 8, pitch / 4, 0.05, 0)
+    test_ext_clearance(pitch / 8, pitch / 4, 0.05, 0.001)
