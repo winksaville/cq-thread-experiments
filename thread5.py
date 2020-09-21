@@ -3,9 +3,9 @@ from math import atan, cos, degrees, pi, radians, sin, tan
 from typing import Tuple, cast
 
 import cadquery as cq
-from taperable_helix import helix
 
-from threads import ThreadDimensions, int_threads, ext_threads
+from helicalthreads import HelicalThreads
+from threads import int_threads, ext_threads
 from wing_utils import (
     diffPts,
     perpendicular_distance_pt_to_line_2d,
@@ -54,7 +54,7 @@ major_cutoff = pitch/8
 minor_cutoff = pitch/4
 taper_rpos = 0.1
 
-thread_dims = ThreadDimensions(
+ht = HelicalThreads(
     height=nutHeight,
     pitch=pitch,
     dia_major=nutDiameter,
@@ -66,15 +66,15 @@ thread_dims = ThreadDimensions(
     minor_cutoff=minor_cutoff,
     thread_overlap=thread_overlap,
 )
-print(f"thread_dims={vars(thread_dims)}")
+print(f"ht={vars(ht)}")
 
-boltThreads = ext_threads(thread_dims)
+boltThreads = ext_threads(ht)
 # show(boltThreads, "botThreads-0")
 # show(boltThreads.translate((radius * 4, 0, 0)), "botThreads+4")
 # boltThreadsBb: cq.BoundBox = boltThreads.BoundingBox()
 # print(f"bolthreadsBb={vars(boltThreadsBb)}")
 
-boltCoreRadius = thread_dims.ext_helix_radius
+boltCoreRadius = ht.ext_helix_radius
 # print(f"boltCoreRadius={boltCoreRadius} boltRadius={boltRadius:.3f})
 
 
@@ -107,7 +107,7 @@ nutCore = (
 )
 # show(nutCore, "nutCore-0")
 
-nutThreads = int_threads(thread_dims)
+nutThreads = int_threads(ht)
 # show(nutThreads, "nutThreads-0")
 # nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
 # print(f"nuthreadsBb={vars(nutThreadsBb)}")

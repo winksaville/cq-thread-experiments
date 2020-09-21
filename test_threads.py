@@ -8,7 +8,7 @@ import cadquery as cq
 import pytest
 from taperable_helix import helix
 
-from threads import HelixLocation, ThreadDimensions
+from helicalthreads import HelicalThreads, HelixLocation
 from wing_utils import (
     X,
     Y,
@@ -64,7 +64,7 @@ def isclose_or_gt(v1, v2, abs_tol=1e-9) -> bool:
 )
 def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap) -> None:
 
-    thread_dims = ThreadDimensions(
+    ht = HelicalThreads(
         height=height,
         pitch=pitch,
         dia_major=radius,
@@ -76,13 +76,13 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
         taper_rpos=taper_rpos,
         ext_clearance=ext_clearance,
     )
-    print(f"thread_dims={vars(thread_dims)}")
+    print(f"ht={vars(ht)}")
 
     # Compute the points of the internal thread helixes
     intpts = []
     x: float
     y: float
-    for hl in thread_dims.int_helixes:
+    for hl in ht.int_helixes:
         # print(f"tloop: hl={hl}")
         x = hl.radius + hl.horz_offset
         y = hl.vert_offset
@@ -90,7 +90,7 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
 
     # Compute the points of the external thread helixes
     extpts = []
-    for hl in thread_dims.ext_helixes:
+    for hl in ht.ext_helixes:
         # print(f"tloop: hl={hl} x={x} y={y}")
         x = hl.radius + hl.horz_offset
         y = hl.vert_offset
@@ -109,7 +109,7 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
         print(f"intpts={intpts}")
         print(f"extpts={extpts}")
         print(f"nxipts={nxipts}")
-        print(f"{i}  thread_dims.thread_overlap={thread_dims.thread_overlap}")
+        print(f"{i}  ht.thread_overlap={ht.thread_overlap}")
 
         show(cq.Workplane("XZ").polyline(intpts).close(), f"int{i}")
         show(cq.Workplane("XZ").polyline(extpts).close(), f"ext{i}")
@@ -138,19 +138,19 @@ def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap
 
         ext2_major = perpendicular_distance_pt_to_line_2d(extpts[2], intpts[0], intpts[1])
         print(f"{i}  ext2_major={ext2_major:.10f} {extpts[2]} {intpts[0]} {intpts[1]}")
-        assert isclose_or_gt(ext2_major, ext_clearance + thread_dims.thread_overlap, abs_tol=1e-9)
+        assert isclose_or_gt(ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
 
         extL_major = perpendicular_distance_pt_to_line_2d(extpts[-1], intpts[0], intpts[1])
         print(f"{i}  extL_major={extL_major:.10f} {extpts[-1]} {intpts[0]} {intpts[1]}")
-        assert isclose_or_gt(ext2_major, ext_clearance + thread_dims.thread_overlap, abs_tol=1e-9)
+        assert isclose_or_gt(ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
 
         int2_minor = perpendicular_distance_pt_to_line_2d(intpts[2], extpts[0], extpts[1])
         print(f"{i}  int2_minor={int2_minor:.10f} {intpts[2]} {extpts[0]} {extpts[1]}")
-        assert isclose(int2_minor, ext_clearance+ thread_dims.thread_overlap, abs_tol=1e-9)
+        assert isclose(int2_minor, ext_clearance+ ht.thread_overlap, abs_tol=1e-9)
 
         intL_minor = perpendicular_distance_pt_to_line_2d(intpts[-1], extpts[0], extpts[1])
         print(f"{i}  intL_minor={intL_minor:.10f} {intpts[-1]} {extpts[0]} {extpts[1]}")
-        assert isclose(intL_minor, ext_clearance+ thread_dims.thread_overlap, abs_tol=1e-9)
+        assert isclose(intL_minor, ext_clearance+ ht.thread_overlap, abs_tol=1e-9)
 
         ext1_slope = perpendicular_distance_pt_to_line_2d(extpts[1], nxipts[0], nxipts[-1])
         print(f"{i}  ext1_slope={ext1_slope:.10f} {extpts[1]} {nxipts[0]} {nxipts[-1]}")
