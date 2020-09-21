@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import atan, cos, degrees, pi, radians, sin, tan
-from typing import List, Tuple, Union, cast
+from typing import List, Tuple, cast
 
 import cadquery as cq
 from taperable_helix import helix
@@ -30,8 +30,8 @@ class ThreadDimensions:
     dia_major: float
     angle_degs: float
     external_threads: bool
-    dia_major_cutoff_pitch_divisor: Union[float]
-    dia_minor_cutoff_pitch_divisor: Union[float]
+    major_cutoff: float
+    minor_cutoff: float
     thread_overlap: float
     inset: float
     taper_rpos: float
@@ -39,8 +39,6 @@ class ThreadDimensions:
     angle_radians: float
     tan_hangle: float
     sin_hangle: float
-    dia_major_cutoff: float
-    dia_minor_cutoff: float
     tip_to_major_cutoff: float
     tip_to_minor_cutoff: float
     thread_depth: float
@@ -65,8 +63,8 @@ class ThreadDimensions:
         dia_major: float,
         angle_degs: float,
         external_threads: bool,
-        dia_major_cutoff_pitch_divisor: Union[float],
-        dia_minor_cutoff_pitch_divisor: Union[float],
+        major_cutoff: float,
+        minor_cutoff: float,
         thread_overlap: float,
         inset: float,
         taper_rpos: float,
@@ -76,7 +74,7 @@ class ThreadDimensions:
             f"ThreadDimensions:+ height={height:.3f} dia_major={dia_major:.3f} pitch={pitch:.3f} angle_degs={angle_degs:.3f} external_threads={external_threads}"
         )
         print(
-            f"ThreadDimensions: dia_major_cutoff_pitch_divisor={dia_major_cutoff_pitch_divisor} dia_minor_cutoff_pitch_divisor={dia_minor_cutoff_pitch_divisor}"
+            f"ThreadDimensions: major_cutoff={major_cutoff} minor_cutoff={minor_cutoff}"
         )
         print(
             f"ThreadDimensions: thread_overlap={thread_overlap:.3f} inset={inset:.3f} taper_rpos={taper_rpos:.3f}"
@@ -87,8 +85,8 @@ class ThreadDimensions:
         self.dia_major = dia_major
         self.angle_degs = angle_degs
         self.external_threads = external_threads
-        self.dia_major_cutoff_pitch_divisor = dia_major_cutoff_pitch_divisor
-        self.dia_minor_cutoff_pitch_divisor = dia_minor_cutoff_pitch_divisor
+        self.major_cutoff = major_cutoff
+        self.minor_cutoff = minor_cutoff
         self.thread_overlap = thread_overlap
         self.inset = inset
         self.taper_rpos = taper_rpos
@@ -97,25 +95,14 @@ class ThreadDimensions:
         self.angle_radians = radians(angle_degs)
         self.tan_hangle = tan(self.angle_radians / 2)
         self.sin_hangle = sin(self.angle_radians / 2)
-        self.dia_major_cutoff = (
-            (pitch / dia_major_cutoff_pitch_divisor)
-            if (dia_major_cutoff_pitch_divisor != 0)
-            else 0
-        )
-        self.dia_minor_cutoff = (
-            (pitch / dia_minor_cutoff_pitch_divisor)
-            if (dia_minor_cutoff_pitch_divisor != 0)
-            else 0
-        )
-        print(
-            f"ThreadDimensions: dia_major_cutoff={self.dia_major_cutoff:.3f} dia_minor_cutoff={self.dia_minor_cutoff:.3f}"
-        )
-        self.tip_to_major_cutoff: float = ((pitch - self.dia_major_cutoff) / 2) / self.tan_hangle
-        self.tip_to_minor_cutoff: float = (self.dia_minor_cutoff / 2) / self.tan_hangle
+        self.major_cutoff = major_cutoff
+        self.minor_cutoff = minor_cutoff
+        self.tip_to_major_cutoff = ((pitch - self.major_cutoff) / 2) / self.tan_hangle
+        self.tip_to_minor_cutoff = (self.minor_cutoff / 2) / self.tan_hangle
         print(
             f"ThreadDimensions: tip_to_major_cutoff={self.tip_to_major_cutoff:.3f} tip_to_minor_cutoff={self.tip_to_minor_cutoff:.3f}"
         )
-        self.thread_depth: float = self.tip_to_major_cutoff - self.tip_to_minor_cutoff
+        self.thread_depth = self.tip_to_major_cutoff - self.tip_to_minor_cutoff
         print(f"ThreadDimensions: thread_depth={self.thread_depth}")
 
         # Internal threads have helix thread at the dia_major side
@@ -124,9 +111,9 @@ class ThreadDimensions:
 
         self.thread_overlap_vert_adj = self.thread_overlap * self.tan_hangle
         self.thread_half_height_at_helix_radius = (
-            (pitch - self.dia_major_cutoff) / 2
+            (pitch - self.major_cutoff) / 2
         ) + self.thread_overlap_vert_adj
-        self.thread_half_height_at_opposite_helix_radius = self.dia_minor_cutoff / 2
+        self.thread_half_height_at_opposite_helix_radius = self.minor_cutoff / 2
         print(
             f"thh_at_r={self.thread_half_height_at_helix_radius} thh_at_or={self.thread_half_height_at_opposite_helix_radius} td={self.thread_depth}"
         )
@@ -153,7 +140,7 @@ class ThreadDimensions:
                 vert_offset=+self.thread_half_height_at_opposite_helix_radius,
             )
         )
-        if self.dia_minor_cutoff > 0:
+        if self.minor_cutoff > 0:
             self.helixes.append(
                 HelixLocation(
                     radius=self.helix_radius,
@@ -164,7 +151,7 @@ class ThreadDimensions:
 
         # Use clearance to calcuate external_threads values
         h: float = self.ext_clearance / self.sin_hangle
-        self.ext_vert_adj: float = (h - self.ext_clearance) * self.tan_hangle
+        self.ext_vert_adj = (h - self.ext_clearance) * self.tan_hangle
         print(f"h={h} self.ext_vert_adj={self.ext_vert_adj}")
 
         # External threads have the helix on the minor side and
@@ -175,7 +162,7 @@ class ThreadDimensions:
         )
 
         ext_thread_half_height_at_ext_helix_radius: float = (
-            ((pitch - self.dia_minor_cutoff) / 2)
+            ((pitch - self.minor_cutoff) / 2)
             - self.ext_vert_adj
         )
         ext_thread_half_height_at_ext_helix_radius_plus_tova: float = (
@@ -188,7 +175,7 @@ class ThreadDimensions:
         # compute the thread depth. Under these circumstances the clearance
         # from the external tip to internal core will be close to ext_clearance
         # or greater. See test_threads.py or test_threads_new.py.
-        ext_thread_half_height_at_opposite_ext_helix_radius: float = (self.dia_major_cutoff / 2) - self.ext_vert_adj
+        ext_thread_half_height_at_opposite_ext_helix_radius: float = (self.major_cutoff / 2) - self.ext_vert_adj
         ext_thread_depth: float = self.thread_depth
         if ext_thread_half_height_at_opposite_ext_helix_radius < 0:
             ext_thread_half_height_at_opposite_ext_helix_radius = 0
@@ -220,7 +207,7 @@ class ThreadDimensions:
                 vert_offset=+ext_thread_half_height_at_opposite_ext_helix_radius,
             )
         )
-        if ext_thread_half_height_at_opposite_ext_helix_radius > 0: #self.dia_major_cutoff > 0:
+        if ext_thread_half_height_at_opposite_ext_helix_radius > 0: #self.major_cutoff > 0:
             self.ext_helixes.append(
                 HelixLocation(
                     radius=self.ext_helix_radius,
@@ -236,8 +223,8 @@ def threads(
     dia_major: float,
     angle_degs: float = 60,
     external_threads: bool = True,
-    dia_major_cutoff_pitch_divisor: Union[float] = 8,
-    dia_minor_cutoff_pitch_divisor: Union[float] = 4,
+    major_cutoff: float = 8,
+    minor_cutoff: float = 4,
     thread_overlap: float = 0.0001,
     inset: float = 0,
     taper_rpos: float = 0.10,
@@ -253,9 +240,9 @@ def threads(
     :param dia_major: Diameter of threads its largest dimension
     :param pitch: Peek to Peek measurement of the threads in units default is mm
     :param angle_degs: Angle of the thread profile in degrees
-    :param dia_major_cutoff_pitch_divisor: is v in pitch/v to determine size of MajorCutOff
+    :param major_cutoff: is v in pitch/v to determine size of MajorCutOff
         0 for no MajorCutOff
-    :param dia_minor_cutoff_pitch_divisor: is v in pitch/v to determin size of MinorCutOff
+    :param minor_cutoff: is v in pitch/v to determin size of MinorCutOff
         0 for no MinorCutOff
     :param thread_overlap: amount to increase alter dimensions so threads and core overlap
         and a manifold is created
@@ -265,7 +252,7 @@ def threads(
     """
 
     # print(f"threads:+ height={height:.3f} dia_major={dia_major:.3f} pitch={pitch:.3f} angle_degs={angle_degs:.3f} external_threads={external_threads}")
-    # print(f"threads: dia_major_cutoff_pitch_divisor={dia_major_cutoff_pitch_divisor} dia_minor_cutoff_pitch_divisor={dia_minor_cutoff_pitch_divisor}")
+    # print(f"threads: major_cutoff={major_cutoff} minor_cutoff={minor_cutoff}")
     # print(f"threads: thread_overlap={thread_overlap:.3f} inset={inset:.3f} taper_rpos={taper_rpos:.3f}")
 
     td = ThreadDimensions(
@@ -274,8 +261,8 @@ def threads(
         dia_major,
         angle_degs,
         external_threads,
-        dia_major_cutoff_pitch_divisor,
-        dia_minor_cutoff_pitch_divisor,
+        major_cutoff,
+        minor_cutoff,
         thread_overlap,
         inset,
         taper_rpos,

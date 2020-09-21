@@ -2,7 +2,7 @@
 # TODO: Shouldn't need the "compensation" code except for thread_overlap
 # TODO: What to do about negative parameters such as ext_clearance and thread_overlap?
 from math import atan, cos, degrees, isclose, pi, radians, sin, tan
-from typing import Tuple, Union, cast
+from typing import Tuple, cast
 
 import cadquery as cq
 import pytest
@@ -29,8 +29,8 @@ pitch = 2
 radius = 8
 angle_degs = 90
 external_threads = False
-major_pd = 8
-minor_pd = 4
+major_cutoff = pitch/8
+minor_cutoff = pitch/4
 thread_overlap = 0 #1e-3
 inset = 0 #pitch / 3
 taper_rpos = 0.1
@@ -43,27 +43,27 @@ def isclose_or_gt(v1, v2, abs_tol=1e-9) -> bool:
     return isclose(v1, v2, abs_tol=abs_tol) or (v1 > v2)
 
 @pytest.mark.parametrize(
-    "major_pd,minor_pd,ext_clearance,thread_overlap",
+    "major_cutoff,minor_cutoff,ext_clearance,thread_overlap",
     [
         (0, 0, 0, 0),
         (0, 0, 0, 0.001),
         (0, 0, 0.05, 0),
         (0, 0, 0.05, 0.001),
-        (0, 4, 0, 0),
-        (0, 4, 0, 0.001),
-        (0, 4, 0.05, 0),
-        (0, 4, 0.05, 0.001),
-        (8, 0, 0, 0),
-        (8, 0, 0, 0.001),
-        (8, 0, 0.05, 0),
-        (8, 0, 0.05, 0.001),
-        (8, 4, 0, 0),
-        (8, 4, 0, 0.001),
-        (8, 4, 0.05, 0),
-        (8, 4, 0.05, 0.001),
+        (0, pitch/4, 0, 0),
+        (0, pitch/4, 0, 0.001),
+        (0, pitch/4, 0.05, 0),
+        (0, pitch/4, 0.05, 0.001),
+        (pitch/8, 0, 0, 0),
+        (pitch/8, 0, 0, 0.001),
+        (pitch/8, 0, 0.05, 0),
+        (pitch/8, 0, 0.05, 0.001),
+        (pitch/8, pitch/4, 0, 0),
+        (pitch/8, pitch/4, 0, 0.001),
+        (pitch/8, pitch/4, 0.05, 0),
+        (pitch/8, pitch/4, 0.05, 0.001),
     ]
 )
-def test_ext_clearance(major_pd, minor_pd, ext_clearance, thread_overlap) -> None:
+def test_ext_clearance(major_cutoff, minor_cutoff, ext_clearance, thread_overlap) -> None:
 
     thread_dims = ThreadDimensions(
         height=height,
@@ -71,8 +71,8 @@ def test_ext_clearance(major_pd, minor_pd, ext_clearance, thread_overlap) -> Non
         dia_major=radius,
         angle_degs=angle_degs,
         external_threads=external_threads,
-        dia_major_cutoff_pitch_divisor=major_pd,
-        dia_minor_cutoff_pitch_divisor=minor_pd,
+        major_cutoff=major_cutoff,
+        minor_cutoff=minor_cutoff,
         thread_overlap=thread_overlap,
         inset=inset,
         taper_rpos=taper_rpos,
@@ -173,17 +173,17 @@ if __name__ == "__main__" or "show_object" in globals():
     test_ext_clearance(0, 0, 0.05, 0) # int_helixes == tri ext_helixes == tri
     test_ext_clearance(0, 0, 0.05, 0.001) # int_helixes == tri ext_helixes == tri
 
-    test_ext_clearance(0, 4, 0, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(0, 4, 0, 0.001) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(0, 4, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(0, 4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(0, pitch/4, 0, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(0, pitch/4, 0, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(0, pitch/4, 0.05, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(0, pitch/4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
 
-    test_ext_clearance(8, 0, 0, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(8, 0, 0, 0.001) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(8, 0, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(8, 0, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch/8, 0, 0, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch/8, 0, 0, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch/8, 0, 0.05, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch/8, 0, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
 
-    test_ext_clearance(8, 4, 0, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(8, 4, 0, 0.001) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(8, 4, 0.05, 0) # int_helixes == trap ext_helixes == trap
-    test_ext_clearance(8, 4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch/8, pitch/4, 0, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch/8, pitch/4, 0, 0.001) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch/8, pitch/4, 0.05, 0) # int_helixes == trap ext_helixes == trap
+    test_ext_clearance(pitch/8, pitch/4, 0.05, 0.001) # int_helixes == trap ext_helixes == trap
