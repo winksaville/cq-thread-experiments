@@ -3,7 +3,7 @@ import cadquery as cq
 
 from cq_threads import int_threads
 from helicalthreads import HelicalThreads
-from wing_utils import dbg, setCtx, show
+from utils import dbg, setCtx, show
 
 setCtx(globals())
 

@@ -6,7 +6,7 @@ import cadquery as cq
 from taperable_helix import helix
 
 from helicalthreads import HelicalThreads, HelixLocation
-from wing_utils import dbg, setCtx, show
+from utils import dbg, setCtx, show
 
 setCtx(globals())
 

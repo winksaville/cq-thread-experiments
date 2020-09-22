@@ -21,12 +21,14 @@ c:
 
 format: f
 f:
-	isort *.py
-	black *.py
-	flake8 *.py
+	isort *.py cq-bolt cq-nut
+	black *.py cq-bolt cq-nut
+	flake8 *.py cq-bolt cq-nut
 
 mypy:
 	mypy *.py
+	mypy cq-bolt
+	mypy cq-nut
 
 t:
 	pytest

@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 # TODO: What to do about negative parameters such as ext_clearance and thread_overlap?
+import sys
 from math import atan, cos, degrees, isclose, pi, radians, sin, tan
 from typing import Tuple, cast
 
@@ -7,7 +9,7 @@ import pytest
 from taperable_helix import helix
 
 from helicalthreads import HelicalThreads, HelixLocation
-from wing_utils import (
+from utils import (
     X,
     Y,
     Z,
@@ -188,7 +190,7 @@ def test_ext_clearance(
         nxipts = [(x, y + pitch) for x, y in nxipts]
 
 
-if __name__ == "__main__" or "show_object" in globals():
+if __name__ == "__main__" or "cq_editor" in sys.modules:
     test_ext_clearance(0, 0, 0, 0)
     test_ext_clearance(0, 0, 0, 0.001)
     test_ext_clearance(0, 0, 0.05, 0)

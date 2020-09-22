@@ -3,7 +3,6 @@ from functools import reduce
 from math import radians, sqrt
 from typing import List, Sequence, Tuple, Union, cast
 
-# import cadquery as cq
 import cadquery as cq
 
 X: int = 0

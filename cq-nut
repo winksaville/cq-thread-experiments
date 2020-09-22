@@ -6,11 +6,7 @@ import cadquery as cq
 
 from cq_nut import cq_nut
 from helicalthreads import HelicalThreads
-from wing_utils import (
-    setCtx,
-    show,
-    dbg,
-)
+from utils import dbg, setCtx, show
 
 setCtx(globals())
 
@@ -100,7 +96,12 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
         default=height,
     )
     parser.add_argument(
-        "-hs", "--head_size", help="Size of head", nargs="?", type=float, default=head_size,
+        "-hs",
+        "--head_size",
+        help="Size of head",
+        nargs="?",
+        type=float,
+        default=head_size,
     )
     parser.add_argument(
         "-mj",
