@@ -6,7 +6,7 @@ import cadquery as cq
 from taperable_helix import helix
 
 from helicalthreads import HelicalThreads, HelixLocation
-from wing_utils import perpendicular_distance_pt_to_line_2d, setCtx, show
+from wing_utils import dbg, setCtx, show
 
 setCtx(globals())
 
@@ -21,14 +21,12 @@ def _threads(external_threads: bool, ht: HelicalThreads) -> cq.Solid:
     :returns: Solid representing the threads and float dept
     """
 
-    # print(f"_threads: external_threads={external_threads} ht={vars(ht)}")
+    # dbg(f"_threads: external_threads={external_threads} ht={vars(ht)}")
 
     helix_locations: List[HelixLocation] = ht.int_helixes if (
         not external_threads
     ) else ht.ext_helixes
 
-    # wires: cq.Wire = [
-    # wires: List[Union[cq.Vector, cq.Location, cq.Shape]] = [
     wires: List[cq.Wire] = [
         (
             cast(
@@ -53,7 +51,7 @@ def _threads(external_threads: bool, ht: HelicalThreads) -> cq.Solid:
 
     lenWires = len(wires)
     assert (lenWires == 3) or (lenWires == 4)
-    # print(f"threads: wires.len={len(wires)}")
+    # dbg(f"threads: wires.len={len(wires)}")
 
     # Create the faces of the thread
     # faces: cq.Faces = []
