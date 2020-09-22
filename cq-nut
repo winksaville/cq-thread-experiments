@@ -18,30 +18,30 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
     # Clearance between internal threads and external threads.
     # The external threads are horzitionally moved to create
     # the clearance.
-    ext_clearance = 0.05
+    ext_clearance: float = 0.05
 
     # Set to guarantee the thread and core overlap and a manifold is created
-    thread_overlap = 0.001
+    thread_overlap: float = 0.001
 
     # Tolerance value for generating STL files
-    stl_tolerance = 1e-3
+    stl_tolerance: float = 1e-3
 
     # The separation between edges of a helix after on revolution.
-    pitch = 2
+    pitch: float = 2
 
     # The included angle of the "tip" of a thread
-    angle_degs = 90
+    angle_degs: float = 90
 
     # Adjust z by inset so threads are inset from the bottom and top
-    inset = pitch / 3
+    inset: float = pitch / 3
 
-    dia_major = 8
-    height = 10 + (2 * inset)
-    head_size = 12  # size of the head
+    dia_major: float = 8
+    height: float = 10 + (2 * inset)
+    head_size: float = 12  # size of the head
 
-    major_cutoff = pitch / 8
-    minor_cutoff = pitch / 4
-    taper_rpos = 0.1
+    major_cutoff: float = pitch / 8
+    minor_cutoff: float = pitch / 4
+    taper_rpos: float = 0.1
 
     parser = argparse.ArgumentParser()
     # Ignored for nuts
