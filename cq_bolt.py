@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from typing import cast
+
 import cadquery as cq
 
 from cq_threads import ext_threads
@@ -34,7 +36,10 @@ def cq_bolt(
     # show(bolt_core, "bolt_core-0")
 
     bolt: cq.Workplane = boltHead.union(bolt_core).union(
-        bolt_threads.move(cq.Location(cq.Vector(0, 0, head_height)))
+        # TODO: What is the "right" way to allow a moved Shape to something
+        # acceptable to .union? I'm using cast to convert the Shape returned
+        # by .move back to Solid to satisfy mypy.
+        cast(cq.Solid, bolt_threads.move(cq.Location(cq.Vector(0, 0, head_height))))
     )
     # show(bolt, "bolt-0")
 
