@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 import argparse
 import sys
-from math import atan, cos, degrees, pi, radians, sin, tan
-from typing import Tuple, cast
 
 import cadquery as cq
 
-from cq_threads import ext_threads, int_threads
+from cq_nut import cq_nut
 from helicalthreads import HelicalThreads
 from wing_utils import (
-    diffPts,
-    perpendicular_distance_pt_to_line_2d,
     setCtx,
     show,
-    translate_2d,
+    dbg,
 )
 
 setCtx(globals())
@@ -130,7 +126,14 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
         type=float,
         default=taper_rpos,
     )
-    args = parser.parse_args()
+
+    if "cq_editor" in sys.modules:
+        # TODO: How to pass parameters to an app executed by cq-ediort
+        # For now we'll pass nothing
+        args = parser.parse_args([])
+    else:
+        # Not cq_editor so parse_args will parse the command line parameters
+        args = parser.parse_args()
 
     print(f"arg={vars(args)}")
 
@@ -162,20 +165,7 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
     )
     print(f"ht={vars(ht)}")
 
-    nutCore = (
-        cq.Workplane("XY", origin=(0, 0, 0))
-        .circle(ht.int_helix_radius)
-        .polygon(6, head_size)
-        .extrude(height)
-    )
-    # show(nutCore, "nutCore-0")
-
-    nutThreads = int_threads(ht)
-    # nutThreadsBb: cq.BoundBox = nutThreads.BoundingBox()
-    # print(f"nutThreadsBb={vars(nutThreadsBb)}")
-    # show(nutThreads, "nutThreads-0")
-
-    nut = nutCore.union(nutThreads)
+    nut: cq.Workplane = cq_nut(ht, head_size)
     show(nut, "nut-0")
 
     fname = f"nut-dia_{dia_major:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-h_{height:.3f}-hs_{head_size}-mj_{major_cutoff}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stl_tolerance:.3f}.stl"
