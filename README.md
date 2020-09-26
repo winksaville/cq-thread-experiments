@@ -7,8 +7,11 @@ There are 2 command line executables that create a bolt or nut respectively
 - `cq-bolt` Create a bolt
 - `cq-nut` Creat a nut
 
+The threads.ini file can be used to change the defaults for all parameters
+
 Execute them with `-h` to see their command line options. Basically you
 can control all of the variables assoicated with each Solid.
+
 
 Refer to the image below for some explanation of variables.
 TODO: create a better image with more information that relates to the parameters.
