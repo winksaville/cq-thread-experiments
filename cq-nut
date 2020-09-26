@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import configparser as cp
 import os
 import sys
 
@@ -11,35 +12,112 @@ from utils import dbg, setCtx, show
 
 setCtx(globals())
 
+# Defaults
+
+# Clearance between internal threads and external threads.
+# The external threads are horzitionally moved to create
+# the clearance.
+DFLT_ext_clearance: float = 0.05
+
+# Set to guarantee the thread and core overlap and a manifold is created
+DFLT_thread_overlap: float = 0.001
+
+# Tolerance value for generating STL files
+DFLT_stl_tolerance: float = 1e-3
+
+# The separation between edges of a helix after on revolution.
+DFLT_pitch: float = 2
+
+# The included angle of the "tip" of a thread
+DFLT_angle_degs: float = 90
+
+# Adjust z by inset so threads are inset from the bottom and top
+DFLT_inset: float = DFLT_pitch / 3
+
+# The major diameter of outer most threads of nut,
+# the minor diameter is the diameter of the inner most part of the nut
+DFLT_dia_major: float = 8
+
+# Height of main item
+DFLT_height: float = 10 + (2 * DFLT_inset)
+
+# Size of the head
+DFLT_head_size: float = 12
+
+# Size of the flat at major diameter
+DFLT_major_cutoff: float = DFLT_pitch / 8
+
+# Size of the flat at minor diameter
+DFLT_minor_cutoff: float = DFLT_pitch / 4
+
+# A decimal fraction such that (taper_out_rpos * t_range) defines
+# the t value where tapering out ends. The tapering begins at t: float = first_t.
+DFLT_taper_out_rpos: float = 0.1
+
+# A decimal fraction such that (taper_in_rpos * t_range) defines
+# the t value where tapering in begins. The tapering ends at t: float = last_t.
+DFLT_taper_in_rpos: float = 1 - DFLT_taper_out_rpos
+
 if __name__ == "__main__" or "cq_editor" in sys.modules:
+    config = cp.ConfigParser()
+    config.read('threads.ini')
+
     # Clearance between internal threads and external threads.
     # The external threads are horzitionally moved to create
     # the clearance.
-    ext_clearance: float = 0.05
+    v: str = config.get('nut', 'ext_clearance', fallback=None)
+    ext_clearance: float = float(eval(v)) if v is not None else DFLT_ext_clearance
 
     # Set to guarantee the thread and core overlap and a manifold is created
-    thread_overlap: float = 0.001
+    v: str = config.get('nut', 'thread_overlap', fallback=None)
+    thread_overlap: float = float(eval(v)) if v is not None else DFLT_thread_overlap
 
     # Tolerance value for generating STL files
-    stl_tolerance: float = 1e-3
+    v: str = config.get('nut', 'stl_tolerance', fallback=None)
+    stl_tolerance: float = float(eval(v)) if v is not None else DFLT_stl_tolerance
 
     # The separation between edges of a helix after on revolution.
-    pitch: float = 2
+    v: str = config.get('nut', 'pitch', fallback=None)
+    pitch: float = float(eval(v)) if v is not None else DFLT_pitch
 
     # The included angle of the "tip" of a thread
-    angle_degs: float = 90
+    v: str = config.get('nut', 'angle_degs', fallback=None)
+    angle_degs: float = float(eval(v)) if v is not None else DFLT_angle_degs
 
     # Adjust z by inset so threads are inset from the bottom and top
-    inset: float = pitch / 3
+    v: str = config.get('nut', 'inset', fallback=None)
+    inset: float = float(eval(v)) if v is not None else DFLT_inset
 
-    dia_major: float = 8
-    height: float = 10 + (2 * inset)
-    head_size: float = 12  # Size of the head
+    # The major diameter of outer most threads of nut,
+    # the minor diameter is the diameter of the inner most part of the nut
+    v: str = config.get('nut', 'dia_major', fallback=None)
+    dia_major: float = float(eval(v)) if v is not None else DFLT_dia_major
 
-    major_cutoff: float = pitch / 8
-    minor_cutoff: float = pitch / 4
-    taper_out_rpos: float = 0.1
-    taper_in_rpos: float = 1 - taper_out_rpos
+    # Height of main item
+    v: str = config.get('nut', 'height', fallback=None)
+    height: float = float(eval(v)) if v is not None else DFLT_height
+
+    # Size of the head
+    v: str = config.get('nut', 'head_size', fallback=None)
+    head_size: float = float(eval(v)) if v is not None else DFLT_head_size
+
+    # Size of the flat at major diameter
+    v: str = config.get('nut', 'major_cutoff', fallback=None)
+    major_cutoff: float = float(eval(v)) if v is not None else DFLT_major_cutoff
+
+    # Size of the flat at minor diameter
+    v: str = config.get('nut', 'minor_cutoff', fallback=None)
+    minor_cutoff: float = float(eval(v)) if v is not None else DFLT_minor_cutoff
+
+    # A decimal fraction such that (taper_out_rpos * t_range) defines
+    # the t value where tapering out ends. The tapering begins at t: float = first_t.
+    v: str = config.get('nut', 'taper_out_rpos', fallback=None)
+    taper_out_rpos: float = float(eval(v)) if v is not None else DFLT_taper_out_rpos
+
+    # A decimal fraction such that (taper_in_rpos * t_range) defines
+    # the t value where tapering in begins. The tapering ends at t: float = last_t.
+    v: str = config.get('nut', 'taper_in_rpos', fallback=None)
+    taper_in_rpos: float = float(eval(v)) if v is not None else DFLT_taper_in_rpos
 
     parser = argparse.ArgumentParser()
     # Ignored for nuts
@@ -168,8 +246,8 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
         angle_degs=angle_degs,
         inset=inset,
         ext_clearance=ext_clearance,
-        taper_out_rpos=taper_out_rpos,
         taper_in_rpos=taper_in_rpos,
+        taper_out_rpos=taper_out_rpos,
         major_cutoff=major_cutoff,
         minor_cutoff=minor_cutoff,
         thread_overlap=thread_overlap,
@@ -180,6 +258,6 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
     show(nut, "nut-0")
 
     directory: str = "generated"
-    fname = f"nut-dia_{dia_major:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-h_{height:.3f}-hs_{head_size}-mj_{major_cutoff}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stl_tolerance:.3f}.stl"
+    fname = f"nut-dia_{dia_major:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-h_{height:.3f}-hs_{head_size:.3f}-mj_{major_cutoff:.3f}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stl_tolerance:.3f}.stl"
     cq.exporters.export(nut, os.path.join(directory, fname), tolerance=stl_tolerance)
     print(f"{fname}")
