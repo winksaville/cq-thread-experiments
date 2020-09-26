@@ -32,7 +32,8 @@ major_cutoff = pitch / 8
 minor_cutoff = pitch / 4
 thread_overlap = 0  # 1e-3
 inset = 0  # pitch / 3
-taper_rpos = 0.1
+taper_in_rpos = 0.1
+taper_out_rpos = 0.9
 ext_clearance = 0  # 0.05
 
 height = 4 + (2 * inset)
@@ -77,7 +78,8 @@ def test_ext_clearance(
         minor_cutoff=minor_cutoff,
         thread_overlap=thread_overlap,
         inset=inset,
-        taper_rpos=taper_rpos,
+        taper_in_rpos=taper_in_rpos,
+        taper_out_rpos=taper_out_rpos,
         ext_clearance=ext_clearance,
     )
     print(f"ht={vars(ht)}")

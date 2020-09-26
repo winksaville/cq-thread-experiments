@@ -29,7 +29,8 @@ class HelicalThreads:
     angle_degs: float
     inset: float
     ext_clearance: float
-    taper_rpos: float
+    taper_out_rpos: float
+    taper_in_rpos: float
     major_cutoff: float
     minor_cutoff: float
     thread_overlap: float
@@ -48,7 +49,8 @@ class HelicalThreads:
         angle_degs: float,
         inset: float,
         ext_clearance: float,
-        taper_rpos: float,
+        taper_out_rpos: float,
+        taper_in_rpos: float,
         major_cutoff: float,
         minor_cutoff: float,
         thread_overlap: float,
@@ -60,7 +62,15 @@ class HelicalThreads:
         :param angle_degs: Angle of the thread profile in degrees
         :param inset: Size to inset the top and bottom of the height of the threads
         :param ext_clearance: Size to reduce the radius (dia_major / 2) of the external threads
-        :param taper_rpos: percent of threads which are tapered at the ends
+        :param taper_out_rpos: is a decimal fraction such that (taper_out_rpos
+            * t_range) defines the t value where tapering out from first_t ends.
+            A ValueError exception is raised if taper_out_rpos < 0 or > 1 or
+            taper_out_rpos > taper_in_rpos.
+        :param taper_in_rpos: is a decimal fraction such that (taper_in_rpos
+            * t_range) defines the t value where tapering in begins. The tapering
+            out ends at t = last_t.
+            A ValueError exception is raised if taper_out_rpos < 0 or > 1 or
+            taper_out_rpos > taper_in_rpos.
         :param major_cutoff: Size of flat area at major diameter
         :param major_cutoff: Size of flat area at minor diameter
         :param thread_overlap: Size to increase dimensions so threads and core overlap
@@ -84,7 +94,8 @@ class HelicalThreads:
         self.minor_cutoff = minor_cutoff
         self.thread_overlap = thread_overlap
         self.inset = inset
-        self.taper_rpos = taper_rpos
+        self.taper_out_rpos = taper_out_rpos
+        self.taper_in_rpos = taper_in_rpos
         self.ext_clearance = ext_clearance
 
         angle_radians: float = radians(angle_degs)

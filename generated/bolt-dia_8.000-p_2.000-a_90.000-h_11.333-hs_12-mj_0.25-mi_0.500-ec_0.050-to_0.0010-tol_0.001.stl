@@ -28097,7 +28097,7 @@ solid
      vertex  3.408872e-01  3.307480e+00  1.459749e+01
    endloop
  endfacet
- facet normal  8.050615e-02  9.967541e-01  8.781563e-06
+ facet normal  8.050615e-02  9.967541e-01  8.781564e-06
    outer loop
      vertex  3.408872e-01  3.307480e+00  1.459749e+01
      vertex  3.403979e-01  3.307530e+00  1.336329e+01

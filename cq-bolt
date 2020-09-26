@@ -38,7 +38,8 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
 
     major_cutoff: float = pitch / 8
     minor_cutoff: float = pitch / 4
-    taper_rpos: float = 0.1
+    taper_out_rpos: float = 0.1
+    taper_in_rpos: float = 1 - taper_out_rpos
 
     head_height: float = 4
     wall_thickness: float = 2  # amount substracted from bolt radius to hollow out the bolt
@@ -124,12 +125,20 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
         default=minor_cutoff,
     )
     parser.add_argument(
-        "-t",
-        "--taper_rpos",
-        help="Taper relative position, so 0.1 is 10%% at each end will be tapered",
+        "-tir",
+        "--taper_in_rpos",
+        help="Taper in relative position, so 0.1 is 10%% of the initial thread will be tapered",
         nargs="?",
         type=float,
-        default=taper_rpos,
+        default=taper_in_rpos,
+    )
+    parser.add_argument(
+        "-tor",
+        "--taper_out_rpos",
+        help="Taper out relative position, so 0.9 means so 10% of the ending portion of thread will be tapered",
+        nargs="?",
+        type=float,
+        default=taper_out_rpos,
     )
     parser.add_argument(
         "-hh",
@@ -164,11 +173,10 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
     angle_degs = args.angle_degs
     inset = args.inset
     ext_clearance = args.ext_clearance
-    taper_rpos = args.taper_rpos
+    taper_in_rpos = args.taper_in_rpos
+    taper_out_rpos = args.taper_out_rpos
     major_cutoff = args.major_cutoff
     minor_cutoff = args.minor_cutoff
-    thread_overlap = args.thread_overlap
-
     thread_overlap = args.thread_overlap
     stl_tolerance = args.stl_tolerance
 
@@ -179,7 +187,8 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
         angle_degs=angle_degs,
         inset=inset,
         ext_clearance=ext_clearance,
-        taper_rpos=taper_rpos,
+        taper_out_rpos=taper_out_rpos,
+        taper_in_rpos=taper_in_rpos,
         major_cutoff=major_cutoff,
         minor_cutoff=minor_cutoff,
         thread_overlap=thread_overlap,
