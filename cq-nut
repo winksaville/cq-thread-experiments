@@ -3,6 +3,7 @@ import argparse
 import configparser as cp
 import os
 import sys
+from typing import Union
 
 import cadquery as cq
 
@@ -60,63 +61,63 @@ DFLT_taper_in_rpos: float = 1 - DFLT_taper_out_rpos
 
 if __name__ == "__main__" or "cq_editor" in sys.modules:
     config = cp.ConfigParser()
-    config.read('threads.ini')
+    config.read("threads.ini")
 
     # Clearance between internal threads and external threads.
     # The external threads are horzitionally moved to create
     # the clearance.
-    v: str = config.get('nut', 'ext_clearance', fallback=None)
+    v: Union[str, None] = config.get("nut", "ext_clearance", fallback=None)
     ext_clearance: float = float(eval(v)) if v is not None else DFLT_ext_clearance
 
     # Set to guarantee the thread and core overlap and a manifold is created
-    v: str = config.get('nut', 'thread_overlap', fallback=None)
+    v = config.get("nut", "thread_overlap", fallback=None)
     thread_overlap: float = float(eval(v)) if v is not None else DFLT_thread_overlap
 
     # Tolerance value for generating STL files
-    v: str = config.get('nut', 'stl_tolerance', fallback=None)
+    v = config.get("nut", "stl_tolerance", fallback=None)
     stl_tolerance: float = float(eval(v)) if v is not None else DFLT_stl_tolerance
 
     # The separation between edges of a helix after on revolution.
-    v: str = config.get('nut', 'pitch', fallback=None)
+    v = config.get("nut", "pitch", fallback=None)
     pitch: float = float(eval(v)) if v is not None else DFLT_pitch
 
     # The included angle of the "tip" of a thread
-    v: str = config.get('nut', 'angle_degs', fallback=None)
+    v = config.get("nut", "angle_degs", fallback=None)
     angle_degs: float = float(eval(v)) if v is not None else DFLT_angle_degs
 
     # Adjust z by inset so threads are inset from the bottom and top
-    v: str = config.get('nut', 'inset', fallback=None)
+    v = config.get("nut", "inset", fallback=None)
     inset: float = float(eval(v)) if v is not None else DFLT_inset
 
     # The major diameter of outer most threads of nut,
     # the minor diameter is the diameter of the inner most part of the nut
-    v: str = config.get('nut', 'dia_major', fallback=None)
+    v = config.get("nut", "dia_major", fallback=None)
     dia_major: float = float(eval(v)) if v is not None else DFLT_dia_major
 
     # Height of main item
-    v: str = config.get('nut', 'height', fallback=None)
+    v = config.get("nut", "height", fallback=None)
     height: float = float(eval(v)) if v is not None else DFLT_height
 
     # Size of the head
-    v: str = config.get('nut', 'head_size', fallback=None)
+    v = config.get("nut", "head_size", fallback=None)
     head_size: float = float(eval(v)) if v is not None else DFLT_head_size
 
     # Size of the flat at major diameter
-    v: str = config.get('nut', 'major_cutoff', fallback=None)
+    v = config.get("nut", "major_cutoff", fallback=None)
     major_cutoff: float = float(eval(v)) if v is not None else DFLT_major_cutoff
 
     # Size of the flat at minor diameter
-    v: str = config.get('nut', 'minor_cutoff', fallback=None)
+    v = config.get("nut", "minor_cutoff", fallback=None)
     minor_cutoff: float = float(eval(v)) if v is not None else DFLT_minor_cutoff
 
     # A decimal fraction such that (taper_out_rpos * t_range) defines
     # the t value where tapering out ends. The tapering begins at t: float = first_t.
-    v: str = config.get('nut', 'taper_out_rpos', fallback=None)
+    v = config.get("nut", "taper_out_rpos", fallback=None)
     taper_out_rpos: float = float(eval(v)) if v is not None else DFLT_taper_out_rpos
 
     # A decimal fraction such that (taper_in_rpos * t_range) defines
     # the t value where tapering in begins. The tapering ends at t: float = last_t.
-    v: str = config.get('nut', 'taper_in_rpos', fallback=None)
+    v = config.get("nut", "taper_in_rpos", fallback=None)
     taper_in_rpos: float = float(eval(v)) if v is not None else DFLT_taper_in_rpos
 
     parser = argparse.ArgumentParser()

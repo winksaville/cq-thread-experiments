@@ -3,6 +3,7 @@ import argparse
 import configparser as cp
 import os
 import sys
+from typing import Union
 
 import cadquery as cq
 
@@ -66,71 +67,71 @@ DFLT_wall_thickness = 2
 
 if __name__ == "__main__" or "cq_editor" in sys.modules:
     config = cp.ConfigParser()
-    config.read('threads.ini')
+    config.read("threads.ini")
 
     # Clearance between internal threads and external threads.
     # The external threads are horzitionally moved to create
     # the clearance.
-    v: str = config.get('bolt', 'ext_clearance', fallback=None)
+    v: Union[str, None] = config.get("bolt", "ext_clearance", fallback=None)
     ext_clearance: float = float(eval(v)) if v is not None else DFLT_ext_clearance
 
     # Set to guarantee the thread and core overlap and a manifold is created
-    v: str = config.get('bolt', 'thread_overlap', fallback=None)
+    v = config.get("bolt", "thread_overlap", fallback=None)
     thread_overlap: float = float(eval(v)) if v is not None else DFLT_thread_overlap
 
     # Tolerance value for generating STL files
-    v: str = config.get('bolt', 'stl_tolerance', fallback=None)
+    v = config.get("bolt", "stl_tolerance", fallback=None)
     stl_tolerance: float = float(eval(v)) if v is not None else DFLT_stl_tolerance
 
     # The separation between edges of a helix after on revolution.
-    v: str = config.get('bolt', 'pitch', fallback=None)
+    v = config.get("bolt", "pitch", fallback=None)
     pitch: float = float(eval(v)) if v is not None else DFLT_pitch
 
     # The included angle of the "tip" of a thread
-    v: str = config.get('bolt', 'angle_degs', fallback=None)
+    v = config.get("bolt", "angle_degs", fallback=None)
     angle_degs: float = float(eval(v)) if v is not None else DFLT_angle_degs
 
     # Adjust z by inset so threads are inset from the bottom and top
-    v: str = config.get('bolt', 'inset', fallback=None)
+    v = config.get("bolt", "inset", fallback=None)
     inset: float = float(eval(v)) if v is not None else DFLT_inset
 
     # The major diameter of outer most threads of nut,
     # the minor diameter is the diameter of the inner most part of the nut
-    v: str = config.get('bolt', 'dia_major', fallback=None)
+    v = config.get("bolt", "dia_major", fallback=None)
     dia_major: float = float(eval(v)) if v is not None else DFLT_dia_major
 
     # Height of main item
-    v: str = config.get('bolt', 'height', fallback=None)
+    v = config.get("bolt", "height", fallback=None)
     height: float = float(eval(v)) if v is not None else DFLT_height
 
     # Size of the head
-    v: str = config.get('bolt', 'head_size', fallback=None)
+    v = config.get("bolt", "head_size", fallback=None)
     head_size: float = float(eval(v)) if v is not None else DFLT_head_size
 
     # Size of the flat at major diameter
-    v: str = config.get('bolt', 'major_cutoff', fallback=None)
+    v = config.get("bolt", "major_cutoff", fallback=None)
     major_cutoff: float = float(eval(v)) if v is not None else DFLT_major_cutoff
 
     # Size of the flat at minor diameter
-    v: str = config.get('bolt', 'minor_cutoff', fallback=None)
+    v = config.get("bolt", "minor_cutoff", fallback=None)
     minor_cutoff: float = float(eval(v)) if v is not None else DFLT_minor_cutoff
 
     # A decimal fraction such that (taper_out_rpos * t_range) defines
     # the t value where tapering out ends. The tapering begins at t: float = first_t.
-    v: str = config.get('bolt', 'taper_out_rpos', fallback=None)
+    v = config.get("bolt", "taper_out_rpos", fallback=None)
     taper_out_rpos: float = float(eval(v)) if v is not None else DFLT_taper_out_rpos
 
     # A decimal fraction such that (taper_in_rpos * t_range) defines
     # the t value where tapering in begins. The tapering ends at t: float = last_t.
-    v: str = config.get('bolt', 'taper_in_rpos', fallback=None)
+    v = config.get("bolt", "taper_in_rpos", fallback=None)
     taper_in_rpos: float = float(eval(v)) if v is not None else DFLT_taper_in_rpos
 
     # Height of head
-    v: str = config.get('bolt', 'head_height', fallback=None)
+    v = config.get("bolt", "head_height", fallback=None)
     head_height: float = float(eval(v)) if v is not None else DFLT_head_height
 
     # Amount substracted from bolt radius to hollow out the bolt
-    v: str = config.get('bolt', 'wall_thickness', fallback=None)
+    v = config.get("bolt", "wall_thickness", fallback=None)
     wall_thickness: float = float(eval(v)) if v is not None else DFLT_wall_thickness
 
     parser = argparse.ArgumentParser()
