@@ -6,9 +6,9 @@ from typing import Tuple, cast
 
 import cadquery as cq
 import pytest
-from taperable_helix import helix
+from taperable_helix import Helix, helix
 
-from helicalthreads import HelicalThreads, HelixLocation
+from helicalthreads import HelicalThreadDim, HelicalThreads, helical_threads
 from utils import (
     X,
     Y,
@@ -69,26 +69,27 @@ def test_ext_clearance(
     major_cutoff, minor_cutoff, ext_clearance, thread_overlap
 ) -> None:
 
-    ht = HelicalThreads(
+    htd = HelicalThreadDim(
         height=height,
         pitch=pitch,
-        dia_major=radius,
+        radius=radius,
         angle_degs=angle_degs,
         major_cutoff=major_cutoff,
         minor_cutoff=minor_cutoff,
         thread_overlap=thread_overlap,
-        inset=inset,
+        inset_offset=inset,
         taper_in_rpos=taper_in_rpos,
         taper_out_rpos=taper_out_rpos,
         ext_clearance=ext_clearance,
     )
-    print(f"ht={vars(ht)}")
+    hts: HelicalThreads = helical_threads(htd)
+    print(f"hts={vars(hts)}")
 
     # Compute the points of the internal thread helixes
     intpts = []
     x: float
     y: float
-    for hl in ht.int_helixes:
+    for hl in hts.int_helixes:
         # print(f"tloop: hl={hl}")
         x = hl.radius + hl.horz_offset
         y = hl.vert_offset
@@ -96,26 +97,24 @@ def test_ext_clearance(
 
     # Compute the points of the external thread helixes
     extpts = []
-    for hl in ht.ext_helixes:
+    for hl in hts.ext_helixes:
         # print(f"tloop: hl={hl} x={x} y={y}")
         x = hl.radius + hl.horz_offset
         y = hl.vert_offset
         # Add pitch / 2 to Y so this is next to internal helix
-        extpts.append((x, y + (pitch / 2)))
+        extpts.append((x, y + (hts.htd.pitch / 2)))
     print(f"extpts={extpts}")
 
     # Generate a third set of points which is the next internal set
     # So we can look at cleareances on both sides of every pair
-    nxipts = [(x, y + pitch) for x, y in intpts]
+    nxipts = [(x, y + hts.htd.pitch) for x, y in intpts]
 
-    first_idx: int = 0
-    last_idx: int = 1
-    for i in range(first_idx, last_idx + 1):
+    for i in range(hts.htd.first_t, hts.htd.last_t + 1):
 
         print(f"intpts={intpts}")
         print(f"extpts={extpts}")
         print(f"nxipts={nxipts}")
-        print(f"{i}  ht.thread_overlap={ht.thread_overlap}")
+        print(f"{i}  htd.thread_overlap={htd.thread_overlap}")
 
         show(cq.Workplane("XZ").polyline(intpts).close(), f"int{i}")
         show(cq.Workplane("XZ").polyline(extpts).close(), f"ext{i}")
@@ -151,7 +150,7 @@ def test_ext_clearance(
         )
         print(f"{i}  ext2_major={ext2_major:.10f} {extpts[2]} {intpts[0]} {intpts[1]}")
         assert isclose_or_gt(
-            ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9
+            ext2_major, ext_clearance + htd.thread_overlap, abs_tol=1e-9
         )
 
         extL_major = perpendicular_distance_pt_to_line_2d(
@@ -159,20 +158,20 @@ def test_ext_clearance(
         )
         print(f"{i}  extL_major={extL_major:.10f} {extpts[-1]} {intpts[0]} {intpts[1]}")
         assert isclose_or_gt(
-            ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9
+            ext2_major, ext_clearance + htd.thread_overlap, abs_tol=1e-9
         )
 
         int2_minor = perpendicular_distance_pt_to_line_2d(
             intpts[2], extpts[0], extpts[1]
         )
         print(f"{i}  int2_minor={int2_minor:.10f} {intpts[2]} {extpts[0]} {extpts[1]}")
-        assert isclose(int2_minor, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
+        assert isclose(int2_minor, ext_clearance + htd.thread_overlap, abs_tol=1e-9)
 
         intL_minor = perpendicular_distance_pt_to_line_2d(
             intpts[-1], extpts[0], extpts[1]
         )
         print(f"{i}  intL_minor={intL_minor:.10f} {intpts[-1]} {extpts[0]} {extpts[1]}")
-        assert isclose(intL_minor, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
+        assert isclose(intL_minor, ext_clearance + htd.thread_overlap, abs_tol=1e-9)
 
         ext1_slope = perpendicular_distance_pt_to_line_2d(
             extpts[1], nxipts[0], nxipts[-1]
