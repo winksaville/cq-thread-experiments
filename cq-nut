@@ -8,7 +8,7 @@ from typing import Union
 import cadquery as cq
 
 from cq_nut import cq_nut
-from helicalthreads import HelicalThreads
+from helicalthreads import HelicalThreadDim, HelicalThreads, helical_threads
 from utils import dbg, setCtx, show
 
 setCtx(globals())
@@ -211,7 +211,7 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
     parser.add_argument(
         "-tor",
         "--taper_out_rpos",
-        help="Taper out relative position, so 0.9 means so 10% of the ending portion of thread will be tapered",
+        help="Taper out relative position, so 0.9 means so 10%% of the ending portion of thread will be tapered",
         nargs="?",
         type=float,
         default=taper_out_rpos,
@@ -225,7 +225,7 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
         # Not cq_editor so parse_args will parse the command line parameters
         args = parser.parse_args()
 
-    print(f"arg={vars(args)}")
+    # dbg(f"arg={vars(args)}")
 
     height = args.height
     pitch = args.pitch
@@ -240,25 +240,27 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
     thread_overlap = args.thread_overlap
     stl_tolerance = args.stl_tolerance
 
-    ht = HelicalThreads(
+    htd = HelicalThreadDim(
         height=height,
         pitch=pitch,
-        dia_major=dia_major,
+        radius=dia_major / 2,
         angle_degs=angle_degs,
-        inset=inset,
+        inset_offset=inset,
         ext_clearance=ext_clearance,
-        taper_in_rpos=taper_in_rpos,
         taper_out_rpos=taper_out_rpos,
+        taper_in_rpos=taper_in_rpos,
         major_cutoff=major_cutoff,
         minor_cutoff=minor_cutoff,
         thread_overlap=thread_overlap,
     )
-    print(f"ht={vars(ht)}")
+    # dbg(f"htd={vars(htd)}")
+    hts: HelicalThreads = helical_threads(htd)
+    # dbg(f"hts={vars(hts)}")
 
-    nut: cq.Workplane = cq_nut(ht, head_size)
+    nut: cq.Workplane = cq_nut(hts, head_size)
     show(nut, "nut-0")
 
     directory: str = "generated"
     fname = f"nut-dia_{dia_major:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-h_{height:.3f}-hs_{head_size:.3f}-mj_{major_cutoff:.3f}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stl_tolerance:.3f}.stl"
     cq.exporters.export(nut, os.path.join(directory, fname), tolerance=stl_tolerance)
-    print(f"{fname}")
+    dbg(f"{fname}")

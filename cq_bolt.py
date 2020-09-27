@@ -11,15 +11,14 @@ setCtx(globals())
 
 
 def cq_bolt(
-    ht: HelicalThreads, head_size: float, head_height: float, wall_thickness: float
+    hts: HelicalThreads, head_size: float, head_height: float, wall_thickness: float
 ) -> cq.Workplane:
-    bolt_threads: cq.Solid = ext_threads(ht)
-    dbg(f"{type(bolt_threads)}")
+    bolt_threads: cq.Solid = ext_threads(hts)
     # show(bolt_threads, "bolt_threads-0")
     # bolt_threads_bb: cq.BoundBox = bolt_threads.BoundingBox()
     # dbg(f"bolthreads_bb={vars(bolt_threads_bb)}")
 
-    bolt_core_radius: float = ht.ext_helix_radius
+    bolt_core_radius: float = hts.ext_helix_radius
     # dbg(f"bolt_core_radius={bolt_core_radius} boltRadius={boltRadius:.3f})
 
     boltHead: cq.Workplane = (
@@ -31,7 +30,7 @@ def cq_bolt(
         cq.Workplane("XY", origin=(0, 0, head_height))
         .circle(bolt_core_radius)
         .circle(bolt_core_radius - wall_thickness)
-        .extrude(ht.height)
+        .extrude(hts.htd.height)
     )
     # show(bolt_core, "bolt_core-0")
 

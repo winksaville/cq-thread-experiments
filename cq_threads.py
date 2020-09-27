@@ -1,53 +1,39 @@
-from dataclasses import dataclass
-from math import atan, cos, degrees, pi, radians, sin, tan
-from typing import List, Tuple, Union, cast
+from typing import Callable, List, Tuple, cast
 
 import cadquery as cq
-from taperable_helix import helix
+from taperable_helix import HelixLocation, helix
 
-from helicalthreads import HelicalThreads, HelixLocation
+from helicalthreads import HelicalThreads
 from utils import dbg, setCtx, show
 
 setCtx(globals())
 
 
-def _threads(external_threads: bool, ht: HelicalThreads) -> cq.Solid:
+def _threads(external_threads: bool, hts: HelicalThreads) -> cq.Solid:
     """
     Create a thread helix which may be triangular or trapizodal.
 
     You can control the size and spacing of the threads using
-    the various parameters to ThreadDimensions.
+    the various parameters when construction HelicalThreads.
 
-    :returns: Solid representing the threads and float dept
+    :returns: Solid representing the threads
     """
 
     # dbg(f"_threads: external_threads={external_threads} ht={vars(ht)}")
 
-    helix_locations: List[HelixLocation] = ht.int_helixes if (
+    helixes: List[HelixLocation] = hts.int_helixes if (
         not external_threads
-    ) else ht.ext_helixes
+    ) else hts.ext_helixes
 
+    # Create the helix functions
+    helix_funcs: List[Callable[[float], Tuple[float, float, float]]] = [
+        helix(hts.htd, hl) for hl in helixes
+    ]
+
+    # Create the wires
     wires: List[cq.Wire] = [
-        (
-            cast(
-                cq.Wire,
-                cq.Workplane("XY")
-                .parametricCurve(
-                    helix(
-                        radius=hl.radius,
-                        pitch=ht.pitch,
-                        height=ht.height,
-                        taper_out_rpos=ht.taper_out_rpos,
-                        taper_in_rpos=ht.taper_in_rpos,
-                        inset_offset=ht.inset,
-                        horz_offset=hl.horz_offset,
-                        vert_offset=hl.vert_offset,
-                    )
-                )
-                .val(),
-            )
-        )
-        for hl in helix_locations
+        (cast(cq.Wire, cq.Workplane("XY").parametricCurve(helix_funcs[i]).val(),))
+        for i, hl in enumerate(helixes)
     ]
 
     lenWires = len(wires)
@@ -63,38 +49,85 @@ def _threads(external_threads: bool, ht: HelicalThreads) -> cq.Solid:
         faces.append(cq.Face.makeRuledSurface(wires[2], wires[3]))
     faces.append(cq.Face.makeRuledSurface(wires[-1], wires[0]))
 
-    # TODO: if taper_rpos == 0 we need to create end faces
+    # Add end caps if either taper_{in|out}_rpos is 0
+    out_face_locs: List[cq.Vector] = []
+    out_face_edges: List[cq.Edge] = []
+    out_face_wire: cq.Wire
+    out_face: cq.Face
+    if hts.htd.taper_out_rpos == 0:
+        out_face_locs = [cq.Vector(hf(hts.htd.first_t)) for hf in helix_funcs]
+        # print(f"out_face_locs={out_face_locs}")
+        out_face_edges = [
+            cq.Edge.makeLine(
+                out_face_locs[i],
+                out_face_locs[(i + 1) if (i < len(out_face_locs) - 1) else 0],
+            )
+            for i in range(0, len(out_face_locs))
+        ]
+        # print(f"out_face_edges={out_face_edges}")
+        out_face_wire = cq.Wire.assembleEdges(out_face_edges)
+        # print(f"out_face_wire={out_face_wire}")
+        out_face = cq.Face.makeFromWires(out_face_wire)
+        # print(f"out_face={out_face}")
+        faces.insert(0, out_face)
+
+    in_face_locs: List[cq.Vector] = []
+    in_face_edges: List[cq.Edge] = []
+    in_face_wire: cq.Wire
+    in_face: cq.Face
+    if hts.htd.taper_in_rpos == 1:
+        in_face_locs = [cq.Vector(hf(hts.htd.last_t)) for hf in helix_funcs]
+        # print(f"in_face_locs={in_face_locs}")
+        in_face_edges = [
+            cq.Edge.makeLine(
+                in_face_locs[i],
+                in_face_locs[(i + 1) if (i < len(in_face_locs) - 1) else 0],
+            )
+            for i in range(0, len(in_face_locs))
+        ]
+        # print(f"in_face_edges={in_face_edges}")
+        in_face_wire = cq.Wire.assembleEdges(in_face_edges)
+        # print(f"in_face_wire={in_face_wire}")
+        in_face = cq.Face.makeFromWires(in_face_wire)
+        # print(f"in_face={in_face}")
+        faces.insert(0, in_face)
+
+    # print(f"faces={faces}")
+
+    # Create the shell
+    sh: cq.Shell = cq.Shell.makeShell(faces)
 
     # Create the solid
-    sh: cq.Shell = cq.Shell.makeShell(faces)
     rv: cq.Solid = cq.Solid.makeSolid(sh)
 
     # show(rv, "rv")
 
+    # print("done")
+    # print("")
     return rv
 
 
-def int_threads(ht: HelicalThreads) -> cq.Solid:
+def int_threads(hts: HelicalThreads) -> cq.Solid:
     """
     Create internal threads which may be triangular or trapizodal.
 
     You can control the size and spacing of the threads using
-    the various parameters to HelicalThreads.
+    the various parameters when construction HelicalThreads.
 
     :param ht: HelicalThreads
-    :returns: Solid representing the threads and float dept
+    :returns: Solid representing the threads
     """
-    return _threads(False, ht)
+    return _threads(False, hts)
 
 
-def ext_threads(ht: HelicalThreads) -> cq.Solid:
+def ext_threads(hts: HelicalThreads) -> cq.Solid:
     """
     Create external threads which may be triangular or trapizodal.
 
     You can control the size and spacing of the threads using
-    the various parameters to HelicalThreads.
+    the various parameters when construction HelicalThreads.
 
     :param ht: HelicalThreads
-    :returns: Solid representing the threads and float dept
+    :returns: Solid representing the threads
     """
-    return _threads(True, ht)
+    return _threads(True, hts)
