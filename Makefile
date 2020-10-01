@@ -1,4 +1,3 @@
-.PHONY: help, f, e, p, mypy, t, clean
 
 define PRINT_HELP_PYSCRIPT
 import re, sys
@@ -12,29 +11,38 @@ for line in sys.stdin:
 endef
 export PRINT_HELP_PYSCRIPT
 
+.PHONY: help
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
+.PHONY: p
 p: ## Run xxx with python using "make p app=xxx"
 	@if [ "${app}" == "" ]; then echo "Expecting 'app=xxx'"; exit 1; fi
 	python ${app}
 
+.PHONY: e
 e: ## Run xxx with cq-editor using "make e app=xxx"
 	@if [ "${app}" == "" ]; then echo "Expecting 'app=xxx'"; exit 1; fi
 	cq-editor ${app}
 
-f: ## Format with isort, black and flake8
+.PHONY: f, format
+f: format ## Format with isort, black and flake8
+format: ## Format with isort, black and flake8
 	isort *.py cq-bolt cq-nut
 	black *.py cq-bolt cq-nut
 	flake8 *.py cq-bolt cq-nut
 
+.PHONY: mypy
 mypy: ## Run mypy over files
 	mypy *.py
 	mypy cq-bolt
 	mypy cq-nut
 
-t: ## Test using pytest
+.PHONY: t, test
+t: test ## Test using pytest
+test: ## Test using pytest
 	pytest
 
+.PHONY: clean
 clean: ## Clean files
 	rm -rf __pycache__ .pytest_cache .mypy_cache

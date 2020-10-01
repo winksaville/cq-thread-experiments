@@ -6,9 +6,9 @@ import sys
 from typing import Union
 
 import cadquery as cq
+from helical_thread import HelicalThread, ThreadHelixes, helical_thread
 
 from cq_nut import cq_nut
-from helicalthreads import HelicalThreadDim, HelicalThreads, helical_threads
 from utils import dbg, setCtx, show
 
 setCtx(globals())
@@ -240,7 +240,7 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
     thread_overlap = args.thread_overlap
     stl_tolerance = args.stl_tolerance
 
-    htd = HelicalThreadDim(
+    ht = HelicalThread(
         height=height,
         pitch=pitch,
         radius=dia_major / 2,
@@ -253,11 +253,11 @@ if __name__ == "__main__" or "cq_editor" in sys.modules:
         minor_cutoff=minor_cutoff,
         thread_overlap=thread_overlap,
     )
-    # dbg(f"htd={vars(htd)}")
-    hts: HelicalThreads = helical_threads(htd)
-    # dbg(f"hts={vars(hts)}")
+    # dbg(f"ht={vars(ht)}")
+    ths: ThreadHelixes = helical_thread(ht)
+    # dbg(f"ths={vars(ths)}")
 
-    nut: cq.Workplane = cq_nut(hts, head_size)
+    nut: cq.Workplane = cq_nut(ths, head_size)
     show(nut, "nut-0")
 
     directory: str = "generated"

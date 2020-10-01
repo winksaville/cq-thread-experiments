@@ -1,33 +1,33 @@
 from typing import Callable, List, Tuple, cast
 
 import cadquery as cq
-from taperable_helix import HelixLocation, helix
+from helical_thread import ThreadHelixes
+from taperable_helix import HelixLocation
 
-from helicalthreads import HelicalThreads
 from utils import dbg, setCtx, show
 
 setCtx(globals())
 
 
-def _threads(external_threads: bool, hts: HelicalThreads) -> cq.Solid:
+def _threads(external_threads: bool, ths: ThreadHelixes) -> cq.Solid:
     """
     Create a thread helix which may be triangular or trapizodal.
 
     You can control the size and spacing of the threads using
-    the various parameters when construction HelicalThreads.
+    the various parameters when construction ThreadHelixes.
 
     :returns: Solid representing the threads
     """
 
     # dbg(f"_threads: external_threads={external_threads} ht={vars(ht)}")
 
-    helixes: List[HelixLocation] = hts.int_helixes if (
+    helixes: List[HelixLocation] = ths.int_helixes if (
         not external_threads
-    ) else hts.ext_helixes
+    ) else ths.ext_helixes
 
     # Create the helix functions
     helix_funcs: List[Callable[[float], Tuple[float, float, float]]] = [
-        helix(hts.htd, hl) for hl in helixes
+        ths.ht.helix(hl) for hl in helixes
     ]
 
     # Create the wires
@@ -54,8 +54,8 @@ def _threads(external_threads: bool, hts: HelicalThreads) -> cq.Solid:
     out_face_edges: List[cq.Edge] = []
     out_face_wire: cq.Wire
     out_face: cq.Face
-    if hts.htd.taper_out_rpos == 0:
-        out_face_locs = [cq.Vector(hf(hts.htd.first_t)) for hf in helix_funcs]
+    if ths.ht.taper_out_rpos == 0:
+        out_face_locs = [cq.Vector(hf(ths.ht.first_t)) for hf in helix_funcs]
         # print(f"out_face_locs={out_face_locs}")
         out_face_edges = [
             cq.Edge.makeLine(
@@ -75,8 +75,8 @@ def _threads(external_threads: bool, hts: HelicalThreads) -> cq.Solid:
     in_face_edges: List[cq.Edge] = []
     in_face_wire: cq.Wire
     in_face: cq.Face
-    if hts.htd.taper_in_rpos == 1:
-        in_face_locs = [cq.Vector(hf(hts.htd.last_t)) for hf in helix_funcs]
+    if ths.ht.taper_in_rpos == 1:
+        in_face_locs = [cq.Vector(hf(ths.ht.last_t)) for hf in helix_funcs]
         # print(f"in_face_locs={in_face_locs}")
         in_face_edges = [
             cq.Edge.makeLine(
@@ -107,27 +107,27 @@ def _threads(external_threads: bool, hts: HelicalThreads) -> cq.Solid:
     return rv
 
 
-def int_threads(hts: HelicalThreads) -> cq.Solid:
+def int_threads(ths: ThreadHelixes) -> cq.Solid:
     """
     Create internal threads which may be triangular or trapizodal.
 
     You can control the size and spacing of the threads using
-    the various parameters when construction HelicalThreads.
+    the various parameters when construction ThreadHelixes.
 
-    :param ht: HelicalThreads
+    :param ht: ThreadHelixes
     :returns: Solid representing the threads
     """
-    return _threads(False, hts)
+    return _threads(False, ths)
 
 
-def ext_threads(hts: HelicalThreads) -> cq.Solid:
+def ext_threads(ths: ThreadHelixes) -> cq.Solid:
     """
     Create external threads which may be triangular or trapizodal.
 
     You can control the size and spacing of the threads using
-    the various parameters when construction HelicalThreads.
+    the various parameters when construction ThreadHelixes.
 
-    :param ht: HelicalThreads
+    :param ht: ThreadHelixes
     :returns: Solid representing the threads
     """
-    return _threads(True, hts)
+    return _threads(True, ths)
