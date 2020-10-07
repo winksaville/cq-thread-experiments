@@ -93,6 +93,7 @@ def test_ext_clearance(
         x = hl.radius + hl.horz_offset
         y = hl.vert_offset
         intpts.append((x, y))
+    #print(f"intpts={inttpts}")
 
     # Compute the points of the external thread helixes
     extpts = []
@@ -102,7 +103,7 @@ def test_ext_clearance(
         y = hl.vert_offset
         # Add pitch / 2 to Y so this is next to internal helix
         extpts.append((x, y + (ths.ht.pitch / 2)))
-    print(f"extpts={extpts}")
+    #print(f"extpts={extpts}")
 
     # Generate a third set of points which is the next internal set
     # So we can look at cleareances on both sides of every pair
@@ -138,51 +139,51 @@ def test_ext_clearance(
         for j, (x, y) in enumerate(extpts):
             show(cq.Workplane("XZ", origin=(x, 0, y)).circle(0.01), f"e{j}{i}")
 
-        extL_slope = perpendicular_distance_pt_to_line_2d(
+        dist_extL_to_slope = perpendicular_distance_pt_to_line_2d(
             extpts[-1], intpts[1], intpts[2]
         )
-        print(f"{i}  extL_slope={extL_slope:.10f} {extpts[-1]} {intpts[1]} {intpts[2]}")
-        assert isclose(extL_slope, ext_clearance, abs_tol=1e-9)
+        print(f"{i}  dist_extL_to_slope={dist_extL_to_slope:.10f} {extpts[-1]} {intpts[1]} {intpts[2]}")
+        assert isclose(dist_extL_to_slope, ext_clearance, abs_tol=1e-9)
 
-        ext2_major = perpendicular_distance_pt_to_line_2d(
+        dist_ext2_to_major = perpendicular_distance_pt_to_line_2d(
             extpts[2], intpts[0], intpts[1]
         )
-        print(f"{i}  ext2_major={ext2_major:.10f} {extpts[2]} {intpts[0]} {intpts[1]}")
+        print(f"{i}  dist_ext2_to_major={dist_ext2_to_major:.10f} {extpts[2]} {intpts[0]} {intpts[1]}")
         assert isclose_or_gt(
-            ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9
+            dist_ext2_to_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9
         )
 
-        extL_major = perpendicular_distance_pt_to_line_2d(
+        dist_extL_to_major = perpendicular_distance_pt_to_line_2d(
             extpts[-1], intpts[0], intpts[1]
         )
-        print(f"{i}  extL_major={extL_major:.10f} {extpts[-1]} {intpts[0]} {intpts[1]}")
+        print(f"{i}  dist_extL_to_major={dist_extL_to_major:.10f} {extpts[-1]} {intpts[0]} {intpts[1]}")
         assert isclose_or_gt(
-            ext2_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9
+            dist_ext2_to_major, ext_clearance + ht.thread_overlap, abs_tol=1e-9
         )
 
-        int2_minor = perpendicular_distance_pt_to_line_2d(
+        dist_int2_to_minor = perpendicular_distance_pt_to_line_2d(
             intpts[2], extpts[0], extpts[1]
         )
-        print(f"{i}  int2_minor={int2_minor:.10f} {intpts[2]} {extpts[0]} {extpts[1]}")
-        assert isclose(int2_minor, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
+        print(f"{i}  dist_int2_to_minor={dist_int2_to_minor:.10f} {intpts[2]} {extpts[0]} {extpts[1]}")
+        assert isclose(dist_int2_to_minor, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
 
-        intL_minor = perpendicular_distance_pt_to_line_2d(
+        dist_intL_to_minor = perpendicular_distance_pt_to_line_2d(
             intpts[-1], extpts[0], extpts[1]
         )
-        print(f"{i}  intL_minor={intL_minor:.10f} {intpts[-1]} {extpts[0]} {extpts[1]}")
-        assert isclose(intL_minor, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
+        print(f"{i}  dist_intL_to_minor={dist_intL_to_minor:.10f} {intpts[-1]} {extpts[0]} {extpts[1]}")
+        assert isclose(dist_intL_to_minor, ext_clearance + ht.thread_overlap, abs_tol=1e-9)
 
-        ext1_slope = perpendicular_distance_pt_to_line_2d(
+        dist_ext1_to_slope = perpendicular_distance_pt_to_line_2d(
             extpts[1], nxipts[0], nxipts[-1]
         )
-        print(f"{i}  ext1_slope={ext1_slope:.10f} {extpts[1]} {nxipts[0]} {nxipts[-1]}")
-        assert isclose(ext1_slope, ext_clearance, abs_tol=1e-9)
+        print(f"{i}  dist_ext1_to_slope={dist_ext1_to_slope:.10f} {extpts[1]} {nxipts[0]} {nxipts[-1]}")
+        assert isclose(dist_ext1_to_slope, ext_clearance, abs_tol=1e-9)
 
-        ext2_slope = perpendicular_distance_pt_to_line_2d(
+        dist_ext2_to_slope = perpendicular_distance_pt_to_line_2d(
             extpts[2], nxipts[0], nxipts[-1]
         )
-        print(f"{i}  ext2_slope={ext2_slope:.10f} {extpts[2]} {nxipts[0]} {nxipts[-1]}")
-        assert isclose(ext2_slope, ext_clearance, abs_tol=1e-9)
+        print(f"{i}  dist_ext2_to_slope={dist_ext2_to_slope:.10f} {extpts[2]} {nxipts[0]} {nxipts[-1]}")
+        assert isclose(dist_ext2_to_slope, ext_clearance, abs_tol=1e-9)
 
         # The current nxipts become intpts then compute new extpts and nxipts
         intpts = nxipts
