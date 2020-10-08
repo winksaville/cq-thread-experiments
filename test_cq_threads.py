@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # TODO: What to do about negative parameters such as ext_clearance and thread_overlap?
 import sys
-from math import atan, cos, degrees, isclose, pi, radians, sin, tan
+from math import isclose
 from typing import Tuple, cast
 
 import cadquery as cq
@@ -109,7 +109,9 @@ def test_ext_clearance(
     # So we can look at cleareances on both sides of every pair
     nxipts = [(x, y + ths.ht.pitch) for x, y in intpts]
 
-    for i in range(ths.ht.first_t, ths.ht.last_t + 1):
+    # We will do 2 sets of internal/external pairs so we can
+    # validate the perpendicular distances of all edges.
+    for i in range(0, 2):
 
         print(f"intpts={intpts}")
         print(f"extpts={extpts}")
