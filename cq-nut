@@ -1,266 +1,34 @@
 #!/usr/bin/env python3
-import argparse
-import configparser as cp
+
+__version__ = "0.1.0"
+
 import os
 import sys
-from typing import Union
 
 import cadquery as cq
-from helical_thread import HelicalThread, ThreadHelixes, helical_thread
+from helical_thread import ThreadHelixes, helical_thread
 
 from cq_nut import cq_nut
 from utils import dbg, setCtx, show
+from parameters import Parameters
 
 setCtx(globals())
 
-# Defaults
-
-# Clearance between internal threads and external threads.
-# The external threads are horzitionally moved to create
-# the clearance.
-DFLT_ext_clearance: float = 0.05
-
-# Set to guarantee the thread and core overlap and a manifold is created
-DFLT_thread_overlap: float = 0.001
-
-# Tolerance value for generating STL files
-DFLT_stl_tolerance: float = 1e-3
-
-# The separation between edges of a helix after on revolution.
-DFLT_pitch: float = 2
-
-# The included angle of the "tip" of a thread
-DFLT_angle_degs: float = 90
-
-# Adjust z by inset so threads are inset from the bottom and top
-DFLT_inset: float = DFLT_pitch / 3
-
-# The major diameter of outer most threads of nut,
-# the minor diameter is the diameter of the inner most part of the nut
-DFLT_dia_major: float = 8
-
-# Height of main item
-DFLT_height: float = 10 + (2 * DFLT_inset)
-
-# Size of the head
-DFLT_head_size: float = 12
-
-# Size of the flat at major diameter
-DFLT_major_cutoff: float = DFLT_pitch / 8
-
-# Size of the flat at minor diameter
-DFLT_minor_cutoff: float = DFLT_pitch / 4
-
-# A decimal fraction such that (taper_out_rpos * t_range) defines
-# the t value where tapering out ends. The tapering begins at t: float = first_t.
-DFLT_taper_out_rpos: float = 0.1
-
-# A decimal fraction such that (taper_in_rpos * t_range) defines
-# the t value where tapering in begins. The tapering ends at t: float = last_t.
-DFLT_taper_in_rpos: float = 1 - DFLT_taper_out_rpos
-
 if __name__ == "__main__" or "cq_editor" in sys.modules:
-    config = cp.ConfigParser()
-    config.read("threads.ini")
 
-    # Clearance between internal threads and external threads.
-    # The external threads are horzitionally moved to create
-    # the clearance.
-    v: Union[str, None] = config.get("nut", "ext_clearance", fallback=None)
-    ext_clearance: float = float(eval(v)) if v is not None else DFLT_ext_clearance
+    argv = sys.argv if "cq_editor" not in sys.modules else []
+    # dbg(f"argv={argv}")
 
-    # Set to guarantee the thread and core overlap and a manifold is created
-    v = config.get("nut", "thread_overlap", fallback=None)
-    thread_overlap: float = float(eval(v)) if v is not None else DFLT_thread_overlap
+    params = Parameters(section="nut", argv=argv[1:])
+    # dbg(f"params={vars(params)}")
 
-    # Tolerance value for generating STL files
-    v = config.get("nut", "stl_tolerance", fallback=None)
-    stl_tolerance: float = float(eval(v)) if v is not None else DFLT_stl_tolerance
-
-    # The separation between edges of a helix after on revolution.
-    v = config.get("nut", "pitch", fallback=None)
-    pitch: float = float(eval(v)) if v is not None else DFLT_pitch
-
-    # The included angle of the "tip" of a thread
-    v = config.get("nut", "angle_degs", fallback=None)
-    angle_degs: float = float(eval(v)) if v is not None else DFLT_angle_degs
-
-    # Adjust z by inset so threads are inset from the bottom and top
-    v = config.get("nut", "inset", fallback=None)
-    inset: float = float(eval(v)) if v is not None else DFLT_inset
-
-    # The major diameter of outer most threads of nut,
-    # the minor diameter is the diameter of the inner most part of the nut
-    v = config.get("nut", "dia_major", fallback=None)
-    dia_major: float = float(eval(v)) if v is not None else DFLT_dia_major
-
-    # Height of main item
-    v = config.get("nut", "height", fallback=None)
-    height: float = float(eval(v)) if v is not None else DFLT_height
-
-    # Size of the head
-    v = config.get("nut", "head_size", fallback=None)
-    head_size: float = float(eval(v)) if v is not None else DFLT_head_size
-
-    # Size of the flat at major diameter
-    v = config.get("nut", "major_cutoff", fallback=None)
-    major_cutoff: float = float(eval(v)) if v is not None else DFLT_major_cutoff
-
-    # Size of the flat at minor diameter
-    v = config.get("nut", "minor_cutoff", fallback=None)
-    minor_cutoff: float = float(eval(v)) if v is not None else DFLT_minor_cutoff
-
-    # A decimal fraction such that (taper_out_rpos * t_range) defines
-    # the t value where tapering out ends. The tapering begins at t: float = first_t.
-    v = config.get("nut", "taper_out_rpos", fallback=None)
-    taper_out_rpos: float = float(eval(v)) if v is not None else DFLT_taper_out_rpos
-
-    # A decimal fraction such that (taper_in_rpos * t_range) defines
-    # the t value where tapering in begins. The tapering ends at t: float = last_t.
-    v = config.get("nut", "taper_in_rpos", fallback=None)
-    taper_in_rpos: float = float(eval(v)) if v is not None else DFLT_taper_in_rpos
-
-    parser = argparse.ArgumentParser()
-    # Ignored for nuts
-    parser.add_argument(
-        "-c",
-        "--ext_clearance",
-        help="Clearance between internal and external threads",
-        nargs="?",
-        type=float,
-        default=ext_clearance,
-    )
-    parser.add_argument(
-        "-to",
-        "--thread_overlap",
-        help="Thread overlap with core",
-        nargs="?",
-        type=float,
-        default=thread_overlap,
-    )
-    parser.add_argument(
-        "-st",
-        "--stl_tolerance",
-        help="stl file tollerance",
-        nargs="?",
-        type=float,
-        default=stl_tolerance,
-    )
-    parser.add_argument(
-        "-p", "--pitch", help="thread pitch", nargs="?", type=float, default=pitch,
-    )
-    parser.add_argument(
-        "-a",
-        "--angle_degs",
-        help="Angle of thread in degrees",
-        nargs="?",
-        type=float,
-        default=angle_degs,
-    )
-    parser.add_argument(
-        "-in",
-        "--inset",
-        help="Top and bottom inset of threads",
-        nargs="?",
-        type=float,
-        default=inset,
-    )
-    parser.add_argument(
-        "-d", "--diameter", help="Diameter", nargs="?", type=float, default=dia_major,
-    )
-    parser.add_argument(
-        "-he",
-        "--height",
-        help="Height of threads including inset",
-        nargs="?",
-        type=float,
-        default=height,
-    )
-    parser.add_argument(
-        "-hs",
-        "--head_size",
-        help="Size of head",
-        nargs="?",
-        type=float,
-        default=head_size,
-    )
-    parser.add_argument(
-        "-mj",
-        "--major_cutoff",
-        help="Thread cutoff at outside diameter (major_diameter)",
-        nargs="?",
-        type=float,
-        default=major_cutoff,
-    )
-    parser.add_argument(
-        "-mi",
-        "--minor_cutoff",
-        help="Thread cutoff at inside diameter (minor_diameter)",
-        nargs="?",
-        type=float,
-        default=minor_cutoff,
-    )
-    parser.add_argument(
-        "-tir",
-        "--taper_in_rpos",
-        help="Taper in relative position, so 0.1 is 10%% of the initial thread will be tapered",
-        nargs="?",
-        type=float,
-        default=taper_in_rpos,
-    )
-    parser.add_argument(
-        "-tor",
-        "--taper_out_rpos",
-        help="Taper out relative position, so 0.9 means so 10%% of the ending portion of thread will be tapered",
-        nargs="?",
-        type=float,
-        default=taper_out_rpos,
-    )
-
-    if "cq_editor" in sys.modules:
-        # TODO: How to pass parameters to an app executed by cq-ediort
-        # For now we'll pass nothing
-        args = parser.parse_args([])
-    else:
-        # Not cq_editor so parse_args will parse the command line parameters
-        args = parser.parse_args()
-
-    # dbg(f"arg={vars(args)}")
-
-    height = args.height
-    pitch = args.pitch
-    dia_major = args.diameter
-    angle_degs = args.angle_degs
-    inset = args.inset
-    ext_clearance = args.ext_clearance
-    taper_in_rpos = args.taper_in_rpos
-    taper_out_rpos = args.taper_out_rpos
-    major_cutoff = args.major_cutoff
-    minor_cutoff = args.minor_cutoff
-    thread_overlap = args.thread_overlap
-    stl_tolerance = args.stl_tolerance
-
-    ht = HelicalThread(
-        height=height,
-        pitch=pitch,
-        radius=dia_major / 2,
-        angle_degs=angle_degs,
-        inset_offset=inset,
-        ext_clearance=ext_clearance,
-        taper_out_rpos=taper_out_rpos,
-        taper_in_rpos=taper_in_rpos,
-        major_cutoff=major_cutoff,
-        minor_cutoff=minor_cutoff,
-        thread_overlap=thread_overlap,
-    )
-    # dbg(f"ht={vars(ht)}")
-    ths: ThreadHelixes = helical_thread(ht)
+    ths: ThreadHelixes = helical_thread(params.ht)
     # dbg(f"ths={vars(ths)}")
 
-    nut: cq.Workplane = cq_nut(ths, head_size)
+    nut = cq_nut(ths, params.head_size)
     show(nut, "nut-0")
 
-    directory: str = "generated"
-    fname = f"nut-dia_{dia_major:.3f}-p_{pitch:.3f}-a_{angle_degs:.3f}-h_{height:.3f}-hs_{head_size:.3f}-mj_{major_cutoff:.3f}-mi_{minor_cutoff:.3f}-ec_{ext_clearance:.3f}-to_{thread_overlap:.4f}-tol_{stl_tolerance:.3f}.stl"
-    cq.exporters.export(nut, os.path.join(directory, fname), tolerance=stl_tolerance)
+    directory: str = "generated/"
+    fname = f"nut-dia_{params.dia_major:.3f}-p_{params.ht.pitch:.3f}-a_{params.ht.angle_degs:.3f}-h_{params.ht.height:.3f}-hs_{params.head_size:3f}-mj_{params.ht.major_cutoff:.3f}-mi_{params.ht.minor_cutoff:.3f}-ec_{params.ht.ext_clearance:.3f}-to_{params.ht.thread_overlap:.4f}-tol_{params.stl_tolerance:.3f}.stl"
+    cq.exporters.export(nut, os.path.join(directory, fname), tolerance=params.stl_tolerance)
     dbg(f"{fname}")
